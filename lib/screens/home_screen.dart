@@ -56,16 +56,46 @@ class MealPlanPage extends ConsumerStatefulWidget {
 }
 
 class _MealPlanPageState extends ConsumerState<MealPlanPage> {
-  String? _editingMeal;
-  final TextEditingController _editMealController = TextEditingController();
-  String? _editingMeal;
-  final TextEditingController _editMealController = TextEditingController();
-  @override
-  void dispose() {
-    _mealController.dispose();
-    _editMealController.dispose();
-    super.dispose();
+  Future<void> _saveEditedMeal(User? user, dynamic firestore, String oldMeal, String newMeal) async {
+    if (user == null) return;
+    if (newMeal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Meal cannot be empty'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    if (oldMeal == newMeal) {
+      setState(() {
+        _editingMeal = null;
+      });
+      return;
+    }
+    // Remove old meal, add new meal
+    final removeResult = await firestore.removeMeal(user.uid, _selectedDay, oldMeal);
+    if (removeResult.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error editing meal: [${removeResult.error}'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    final addResult = await firestore.addMeal(user.uid, _selectedDay, newMeal);
+    if (addResult.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error editing meal: [${addResult.error}'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    // ignore: unused_result
+    ref.refresh(mealPlanProvider);
+    setState(() {
+      _editingMeal = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Meal updated!'), backgroundColor: Colors.green),
+    );
   }
+  String? _editingMeal;
+  final TextEditingController _editMealController = TextEditingController();
   late String _selectedDay;
   final TextEditingController _mealController = TextEditingController();
   bool _adding = false;
@@ -175,135 +205,44 @@ class _MealPlanPageState extends ConsumerState<MealPlanPage> {
                     itemBuilder: (context, i) {
                       final meal = meals[i];
                       final isEditing = _editingMeal == meal;
-                      return ListView.separated(
-                        itemCount: meals.length,
-                        separatorBuilder: (_, __) => const Divider(),
-                        itemBuilder: (context, i) {
-                          final meal = meals[i];
-                          final isEditing = _editingMeal == meal;
-                          return ListTile(
-                            title: isEditing
-                                ? Row(
-                                    children: [
-                                      Expanded(
-                                        child: TextField(
-                                          controller: _editMealController,
-                                          autofocus: true,
-                                          onSubmitted: (newMeal) async {
-                                            await _saveEditedMeal(user, firestore, meal, newMeal);
-                                          },
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.check, color: Colors.green),
-                                        onPressed: () async {
-                                          await _saveEditedMeal(user, firestore, meal, _editMealController.text.trim());
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.close, color: Colors.red),
-                                        onPressed: () {
-                                          setState(() {
-                                            _editingMeal = null;
-                                          });
-                                        },
-                                      ),
-                                    ],
-                                  )
-                                : GestureDetector(
-                                    onTap: user == null
-                                        ? null
-                                        : () {
-                                            setState(() {
-                                              _editingMeal = meal;
-                                              _editMealController.text = meal;
-                                            });
-                                          },
-                                    child: Text(meal),
+                      return ListTile(
+                        title: isEditing
+                            ? Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _editMealController,
+                                      autofocus: true,
+                                      onSubmitted: (newMeal) async {
+                                        await _saveEditedMeal(user, firestore, meal, newMeal);
+                                      },
+                                    ),
                                   ),
-                            trailing: user == null
-                                ? null
-                                : Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.edit, color: Colors.blue),
-                                        onPressed: () {
-                                          setState(() {
-                                            _editingMeal = meal;
-                                            _editMealController.text = meal;
-                                          });
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete, color: Colors.red),
-                                        onPressed: () async {
-                                          final result = await firestore.removeMeal(
-                                              user.uid, _selectedDay, meal);
-                                          // ignore: unused_result
-                                          ref.refresh(mealPlanProvider);
-                                          if (result.error != null) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      'Error removing meal: ${result.error}'),
-                                                  backgroundColor: Colors.red),
-                                            );
-                                          } else {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                  content: Text('Meal removed'),
-                                                  backgroundColor: Colors.green),
-                                            );
-                                          }
-                                        },
-                                      ),
-                                    ],
+                                  IconButton(
+                                    icon: const Icon(Icons.check, color: Colors.green),
+                                    onPressed: () async {
+                                      await _saveEditedMeal(user, firestore, meal, _editMealController.text.trim());
+                                    },
                                   ),
-                          );
-                        },
-                      );
-
-      Future<void> _saveEditedMeal(User? user, dynamic firestore, String oldMeal, String newMeal) async {
-        if (user == null) return;
-        if (newMeal.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Meal cannot be empty'), backgroundColor: Colors.red),
-          );
-          return;
-        }
-        if (oldMeal == newMeal) {
-          setState(() {
-            _editingMeal = null;
-          });
-          return;
-        }
-        // Remove old meal, add new meal
-        final removeResult = await firestore.removeMeal(user.uid, _selectedDay, oldMeal);
-        if (removeResult.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error editing meal: ${removeResult.error}'), backgroundColor: Colors.red),
-          );
-          return;
-        }
-        final addResult = await firestore.addMeal(user.uid, _selectedDay, newMeal);
-        if (addResult.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error editing meal: ${addResult.error}'), backgroundColor: Colors.red),
-          );
-          return;
-        }
-        // ignore: unused_result
-        ref.refresh(mealPlanProvider);
-        setState(() {
-          _editingMeal = null;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Meal updated!'), backgroundColor: Colors.green),
-        );
-      }
+                                  IconButton(
+                                    icon: const Icon(Icons.close, color: Colors.red),
+                                    onPressed: () {
+                                      setState(() {
+                                        _editingMeal = null;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              )
+                            : GestureDetector(
+                                onTap: user == null
+                                    ? null
+                                    : () {
+                                        setState(() {
+                                          _editingMeal = meal;
+                                          _editMealController.text = meal;
+                                        });
+                                      },
                                 child: Text(meal),
                               ),
                         trailing: user == null
@@ -350,46 +289,7 @@ class _MealPlanPageState extends ConsumerState<MealPlanPage> {
                       );
                     },
                   );
-@@ class _MealPlanPageState extends ConsumerState<MealPlanPage> {
-
-  Future<void> _saveEditedMeal(User? user, dynamic firestore, String oldMeal, String newMeal) async {
-    if (user == null) return;
-    if (newMeal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Meal cannot be empty'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-    if (oldMeal == newMeal) {
-      setState(() {
-        _editingMeal = null;
-      });
-      return;
-    }
-    // Remove old meal, add new meal
-    final removeResult = await firestore.removeMeal(user.uid, _selectedDay, oldMeal);
-    if (removeResult.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error editing meal: ${removeResult.error}'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-    final addResult = await firestore.addMeal(user.uid, _selectedDay, newMeal);
-    if (addResult.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error editing meal: ${addResult.error}'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-    // ignore: unused_result
-    ref.refresh(mealPlanProvider);
-    setState(() {
-      _editingMeal = null;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Meal updated!'), backgroundColor: Colors.green),
-    );
-  }
+  
                 },
               ),
             ),
