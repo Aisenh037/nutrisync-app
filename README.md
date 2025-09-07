@@ -1,21 +1,64 @@
-<<<<<<< HEAD
-# nutrisync-app
-An AI-powered app for personalized nutrition.
-=======
-# nutrisync
+# NutriSync: Your AI-Powered Nutrition App
 
-A new Flutter project.
+An AI-powered app for personalized meal planning, grocery list management, and health goal tracking, built with Flutter and Firebase.
 
-## Getting Started
+## 🚀 Getting Started
 
-This project is a starting point for a Flutter application.
+This project is a starting point for a Flutter application. To get a local copy up and running, follow these simple steps.
 
-A few resources to get you started if this is your first Flutter project:
+### Prerequisites
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+* Flutter SDK: [Installation Guide](https://docs.flutter.dev/get-started/install)
+* A code editor like VS Code or Android Studio
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
->>>>>>> 74ae7ef (a personal ai meal app)
+### Installation
+
+1.  **Clone the repo**
+    ```sh
+    git clone [https://github.com/your-username/nutrisync-app.git](https://github.com/your-username/nutrisync-app.git)
+    ```
+2.  **Navigate to the project directory**
+    ```sh
+    cd nutrisync-app
+    ```
+3.  **Install dependencies**
+    ```sh
+    flutter pub get
+    ```
+4.  **Run the app**
+    ```sh
+    flutter run
+    ```
+
+## ✨ Features
+
+* **User Authentication**: Secure sign-up and login using Firebase Auth.
+* **Meal Planner**: Add and remove meals for each day of the week.
+* **Grocery List**: Automatically generated grocery lists based on your meal plan.
+* **Profile Management**: Edit your name, dietary needs, and health goals.
+* **Dark Mode**: Switch between light and dark themes.
+
+## 🛠️ Tech Stack
+
+* **Framework**: Flutter
+* **Backend-as-a-Service**: Firebase (Authentication, Firestore Database)
+* **State Management**: Riverpod
+
+---
+
+### Next Steps to Fix the Conflict
+
+Now that you have the corrected content for your `README.md` file, follow these commands in your terminal to finalize the fix:
+
+1.  **Add the fixed file**:
+    ```bash
+    git add README.md
+    ```
+2.  **Continue the rebase**:
+    ```bash
+    git rebase --continue
+    ```
+3.  **Push your code to GitHub**:
+    ```bash
+    git push origin main
+    ```
