@@ -47,401 +47,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-/// MealPlanPage displays and manages the user's meal plan for the week.
-class MealPlanPage extends ConsumerStatefulWidget {
-  const MealPlanPage({Key? key}) : super(key: key);
-
-  @override
-  ConsumerState<MealPlanPage> createState() => _MealPlanPageState();
-}
-
-class _MealPlanPageState extends ConsumerState<MealPlanPage> {
-  Future<void> _saveEditedMeal(User? user, dynamic firestore, String oldMeal, String newMeal) async {
-    if (user == null) return;
-    if (newMeal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Meal cannot be empty'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-    if (oldMeal == newMeal) {
-      setState(() {
-        _editingMeal = null;
-      });
-      return;
-    }
-    // Remove old meal, add new meal
-    final removeResult = await firestore.removeMeal(user.uid, _selectedDay, oldMeal);
-    if (removeResult.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error editing meal: [${removeResult.error}'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-    final addResult = await firestore.addMeal(user.uid, _selectedDay, newMeal);
-    if (addResult.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error editing meal: [${addResult.error}'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-    // ignore: unused_result
-    ref.refresh(mealPlanProvider);
-    setState(() {
-      _editingMeal = null;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Meal updated!'), backgroundColor: Colors.green),
-    );
-  }
-  String? _editingMeal;
-  final TextEditingController _editMealController = TextEditingController();
-  late String _selectedDay;
-  final TextEditingController _mealController = TextEditingController();
-  bool _adding = false;
-  String? _error;
-
-  static const List<String> _days = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday'
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedDay = _days[DateTime.now().weekday - 1];
-  }
-
-  @override
-  void dispose() {
-    _mealController.dispose();
-    _editMealController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final mealPlanAsync = ref.watch(mealPlanProvider);
-    final user = ref.watch(authStateProvider).asData?.value;
-    final firestore = ref.read(firestoreServiceProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Meal Plan'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Text('Day:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(width: 12),
-                DropdownButton<String>(
-                  value: _selectedDay,
-                  items: _days
-                      .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedDay = val);
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _mealController,
-                    decoration: InputDecoration(
-                      labelText: 'Add meal',
-                      errorText: _error,
-                    ),
-                    onSubmitted: (_) => _addMeal(user, firestore),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _adding
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: _adding
-                            ? null
-                            : () {
-                                if (user == null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('Not signed in'),
-                                        backgroundColor: Colors.red),
-                                  );
-                                } else {
-                                  _addMeal(user, firestore);
-                                }
-                              },
-                        child: const Text('Add'),
-                      ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: mealPlanAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
-                data: (mealPlan) {
-                  final meals = mealPlan[_selectedDay] ?? [];
-                  if (meals.isEmpty) {
-                    return const Center(
-                        child: Text('No meals planned for this day.'));
-                  }
-                  return ListView.separated(
-                    itemCount: meals.length,
-                    separatorBuilder: (_, __) => const Divider(),
-                    itemBuilder: (context, i) {
-                      final meal = meals[i];
-                      final isEditing = _editingMeal == meal;
-                      return ListTile(
-                        title: isEditing
-                            ? Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _editMealController,
-                                      autofocus: true,
-                                      onSubmitted: (newMeal) async {
-                                        await _saveEditedMeal(user, firestore, meal, newMeal);
-                                      },
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.check, color: Colors.green),
-                                    onPressed: () async {
-                                      await _saveEditedMeal(user, firestore, meal, _editMealController.text.trim());
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.close, color: Colors.red),
-                                    onPressed: () {
-                                      setState(() {
-                                        _editingMeal = null;
-                                      });
-                                    },
-                                  ),
-                                ],
-                              )
-                            : GestureDetector(
-                                onTap: user == null
-                                    ? null
-                                    : () {
-                                        setState(() {
-                                          _editingMeal = meal;
-                                          _editMealController.text = meal;
-                                        });
-                                      },
-                                child: Text(meal),
-                              ),
-                        trailing: user == null
-                            ? null
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit, color: Colors.blue),
-                                    onPressed: () {
-                                      setState(() {
-                                        _editingMeal = meal;
-                                        _editMealController.text = meal;
-                                      });
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () async {
-                                      final result = await firestore.removeMeal(
-                                          user.uid, _selectedDay, meal);
-                                      // ignore: unused_result
-                                      ref.refresh(mealPlanProvider);
-                                      if (result.error != null) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                              content: Text(
-                                                  'Error removing meal: ${result.error}'),
-                                              backgroundColor: Colors.red),
-                                        );
-                                      } else {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text('Meal removed'),
-                                              backgroundColor: Colors.green),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                      );
-                    },
-                  );
-  
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _addMeal(User? user, dynamic firestore) async {
-    setState(() {
-      _error = null;
-      _adding = true;
-    });
-    final meal = _mealController.text.trim();
-    if (meal.isEmpty) {
-      setState(() {
-        _error = 'Meal cannot be empty';
-        _adding = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Meal cannot be empty'),
-            backgroundColor: Colors.red),
-      );
-      return;
-    }
-    if (user == null) {
-      setState(() {
-        _error = 'Not signed in';
-        _adding = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Not signed in'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-    final result = await firestore.addMeal(user.uid, _selectedDay, meal);
-    if (result.error != null) {
-      setState(() {
-        _error = result.error;
-        _adding = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Error adding meal: ${result.error}'),
-            backgroundColor: Colors.red),
-      );
-      return;
-    }
-    _mealController.clear();
-    setState(() => _adding = false);
-  // ignore: unused_result
-  ref.refresh(mealPlanProvider);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content: Text('Meal added'), backgroundColor: Colors.green),
-    );
-  }
-}
-
-/// HomePage displays a personalized welcome and today's meal plan.
-class HomePage extends ConsumerWidget {
-  String _todayName() {
-    final now = DateTime.now();
-    const days = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday'
-    ];
-    // DateTime.weekday: 1=Monday, ..., 7=Sunday
-    return days[now.weekday - 1];
-  }
-
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(userProvider);
-    final mealPlanAsync = ref.watch(mealPlanProvider);
-    final today = _todayName();
-    return Scaffold(
-      appBar: AppBar(
-        title: userAsync.when(
-          data: (user) => Text('Welcome, ${user?.name ?? 'User'}'),
-          loading: () => const Text('Loading...'),
-          error: (e, _) => const Text('Welcome'),
-        ),
-      ),
-      body: userAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (user) {
-          return Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (user != null)
-                  Text('Hello, ${user.name}!',
-                      style: const TextStyle(
-                          fontSize: 24, fontWeight: FontWeight.bold)),
-                if (user == null)
-                  const Text('No user data found.'),
-                const SizedBox(height: 24),
-                Text("Today's Meal Plan:",
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 12),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: mealPlanAsync.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Text('Error: $e'),
-                      data: (mealPlan) {
-                        final meals = mealPlan[today] ?? [];
-                        if (meals.isEmpty) {
-                          return const Text('No meals planned for today.');
-                        }
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (final meal in meals)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4.0),
-                                child: Text(meal,
-                                    style: const TextStyle(fontSize: 16)),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// GroceriesPage displays and manages the user's grocery list.
+/// GroceriesPage displays and manages the user's grocery list with edit functionality.
 class GroceriesPage extends ConsumerStatefulWidget {
   const GroceriesPage({super.key});
 
@@ -453,11 +59,70 @@ class _GroceriesPageState extends ConsumerState<GroceriesPage> {
   final _itemController = TextEditingController();
   bool _adding = false;
   String? _error;
+  String? _editingItem;
+  final TextEditingController _editController = TextEditingController();
 
   @override
   void dispose() {
     _itemController.dispose();
+    _editController.dispose();
     super.dispose();
+  }
+
+  Future<void> _editGroceryItem(String oldItem, String newItem) async {
+    if (newItem.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Item cannot be empty'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (oldItem == newItem.trim()) {
+      setState(() {
+        _editingItem = null;
+        _editController.clear();
+      });
+      return;
+    }
+
+    final user = ref.read(authStateProvider).asData?.value;
+    final firestore = ref.read(firestoreServiceProvider);
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Not signed in'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    // Remove old item and add new item
+    final removeResult = await firestore.removeGrocery(user.uid, oldItem);
+    if (removeResult.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error editing item: ${removeResult.error}'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    final addResult = await firestore.addGrocery(user.uid, newItem.trim());
+    if (addResult.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error editing item: ${addResult.error}'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() {
+      _editingItem = null;
+      _editController.clear();
+    });
+
+    // Refresh the list
+    ref.refresh(groceriesProvider);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Item updated successfully!'), backgroundColor: Colors.green),
+    );
   }
 
   @override
@@ -514,8 +179,6 @@ class _GroceriesPageState extends ConsumerState<GroceriesPage> {
                             _itemController.clear();
                             _error = result.error;
                           });
-                          // ignore: unused_result
-                          // ignore: unused_result
                           ref.refresh(groceriesProvider);
                           if (result.error != null) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -560,38 +223,437 @@ class _GroceriesPageState extends ConsumerState<GroceriesPage> {
                     separatorBuilder: (_, __) => const Divider(),
                     itemBuilder: (context, i) {
                       final item = groceries[i];
+                      final isEditing = _editingItem == item;
+
                       return ListTile(
-                        title: Text(item),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: user == null
-                              ? null
-                              : () async {
-                                  final result = await firestore
-                                      .removeGrocery(user.uid, item);
-                                  // ignore: unused_result
-                                  // ignore: unused_result
-                                  ref.refresh(groceriesProvider);
-                                  if (result.error != null) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                      SnackBar(
-                                          content: Text(
-                                              'Error removing item: ${result.error}'),
-                                          backgroundColor: Colors.red),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                          content: Text('Item removed'),
-                                          backgroundColor: Colors.green),
-                                    );
-                                  }
-                                },
-                        ),
+                        title: isEditing
+                            ? Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _editController,
+                                      autofocus: true,
+                                      onSubmitted: (newItem) async {
+                                        await _editGroceryItem(item, newItem);
+                                      },
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.check, color: Colors.green),
+                                    onPressed: () async {
+                                      await _editGroceryItem(item, _editController.text.trim());
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close, color: Colors.red),
+                                    onPressed: () {
+                                      setState(() {
+                                        _editingItem = null;
+                                        _editController.clear();
+                                      });
+                                    },
+                                  ),
+                                ],
+                              )
+                            : GestureDetector(
+                                onTap: user == null
+                                    ? null
+                                    : () {
+                                        setState(() {
+                                          _editingItem = item;
+                                          _editController.text = item;
+                                        });
+                                      },
+                                child: Text(item),
+                              ),
+                        trailing: user == null
+                            ? null
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, color: Colors.blue),
+                                    onPressed: () {
+                                      setState(() {
+                                        _editingItem = item;
+                                        _editController.text = item;
+                                      });
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      final result = await firestore
+                                          .removeGrocery(user.uid, item);
+                                      ref.refresh(groceriesProvider);
+                                      if (result.error != null) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  'Error removing item: ${result.error}'),
+                                              backgroundColor: Colors.red),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text('Item removed'),
+                                              backgroundColor: Colors.green),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
                       );
                     },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// HomePage displays a personalized welcome and today's meal plan and grocery summary.
+class HomePage extends ConsumerWidget {
+  String _todayName() {
+    final now = DateTime.now();
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
+    // DateTime.weekday: 1=Monday, ..., 7=Sunday
+    return days[now.weekday - 1];
+  }
+
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userAsync = ref.watch(userProvider);
+    final mealPlanAsync = ref.watch(mealPlanProvider);
+    final groceriesAsync = ref.watch(groceriesProvider);
+    final today = _todayName();
+    return Scaffold(
+      appBar: AppBar(
+        title: userAsync.when(
+          data: (user) => Text('Welcome, ${user?.name ?? 'User'}'),
+          loading: () => const Text('Loading...'),
+          error: (e, _) => const Text('Welcome'),
+        ),
+      ),
+      body: userAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
+        data: (user) {
+          return Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (user != null)
+                    Text('Hello, ${user.name}!',
+                        style: const TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold)),
+                  if (user == null) const Text('No user data found.'),
+                  const SizedBox(height: 24),
+                  Text("Today's Meal Plan:",
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 12),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: mealPlanAsync.when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (e, _) => Text('Error: $e'),
+                        data: (mealPlan) {
+                          final meals = mealPlan[today] ?? [];
+                          if (meals.isEmpty) {
+                            return const Text('No meals planned for today.');
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (final meal in meals)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 4.0),
+                                  child: Text(meal,
+                                      style: const TextStyle(fontSize: 16)),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text("Your Grocery List:",
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 12),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: groceriesAsync.when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (e, _) => Text('Error: $e'),
+                        data: (groceries) {
+                          if (groceries.isEmpty) {
+                            return const Text('No grocery items.');
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (final item in groceries)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 4.0),
+                                  child: Text(item,
+                                      style: const TextStyle(fontSize: 16)),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// MealPlanPage displays and manages the full weekly meal plan with add/delete functionality.
+class MealPlanPage extends ConsumerStatefulWidget {
+  const MealPlanPage({super.key});
+
+  @override
+  ConsumerState<MealPlanPage> createState() => _MealPlanPageState();
+}
+
+class _MealPlanPageState extends ConsumerState<MealPlanPage> {
+  final _mealController = TextEditingController();
+  String? _selectedDay;
+  bool _adding = false;
+  String? _error;
+
+  final List<String> _days = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = _days[0]; // Default to Monday
+  }
+
+  @override
+  void dispose() {
+    _mealController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addMeal() async {
+    final meal = _mealController.text.trim();
+    if (meal.isEmpty || _selectedDay == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a meal and select a day'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    final user = ref.read(authStateProvider).asData?.value;
+    final firestore = ref.read(firestoreServiceProvider);
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Not signed in'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() {
+      _adding = true;
+      _error = null;
+    });
+
+    final result = await firestore.addMeal(user.uid, _selectedDay!, meal);
+    setState(() {
+      _adding = false;
+      _mealController.clear();
+      _error = result.error;
+    });
+
+    ref.refresh(mealPlanProvider);
+
+    if (result.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding meal: ${result.error}'), backgroundColor: Colors.red),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Meal added successfully!'), backgroundColor: Colors.green),
+      );
+    }
+  }
+
+  Future<void> _removeMeal(String day, String meal) async {
+    final user = ref.read(authStateProvider).asData?.value;
+    final firestore = ref.read(firestoreServiceProvider);
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Not signed in'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    final result = await firestore.removeMeal(user.uid, day, meal);
+    ref.refresh(mealPlanProvider);
+
+    if (result.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error removing meal: ${result.error}'), backgroundColor: Colors.red),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Meal removed successfully!'), backgroundColor: Colors.green),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mealPlanAsync = ref.watch(mealPlanProvider);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Meal Plan'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            // Add meal section
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedDay,
+                    decoration: const InputDecoration(labelText: 'Select Day'),
+                    items: _days.map((day) {
+                      return DropdownMenuItem<String>(
+                        value: day,
+                        child: Text(day),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedDay = value;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 3,
+                  child: TextField(
+                    controller: _mealController,
+                    decoration: const InputDecoration(labelText: 'Add meal'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: _adding ? null : _addMeal,
+                  child: _adding
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('Add'),
+                ),
+              ],
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+              ),
+            const SizedBox(height: 24),
+            // Meal plan list
+            Expanded(
+              child: mealPlanAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('Error: $e')),
+                data: (mealPlan) {
+                  if (mealPlan.isEmpty) {
+                    return const Center(child: Text('No meal plan available.'));
+                  }
+                  return ListView(
+                    children: [
+                      const Text('Weekly Meal Plan',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+                      for (final entry in mealPlan.entries)
+                        Card(
+                          margin: const EdgeInsets.only(bottom: 16.0),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(entry.key,
+                                    style: const TextStyle(
+                                        fontSize: 18, fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 8),
+                                if (entry.value.isEmpty)
+                                  const Text('No meals planned.')
+                                else
+                                  for (final meal in entry.value)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(meal, style: const TextStyle(fontSize: 16)),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete, color: Colors.red),
+                                            onPressed: () => _removeMeal(entry.key, meal),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
                   );
                 },
               ),
@@ -651,10 +713,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             return const Center(child: Text('No user data found.'));
           }
           if (!_editing) {
-            final appUser = user; // Use the actual user model type if needed, e.g., 'as AppUser'
+            final appUser = user;
             _nameController.text = appUser.name;
-            _dietaryController.text = appUser.dietaryNeeds.join(', ');
-            _goalsController.text = appUser.healthGoals.join(', ');
+            _dietaryController.text = appUser.dietaryNeeds.length >= 3
+                ? appUser.dietaryNeeds.sublist(0, 3).join(', ')
+                : appUser.dietaryNeeds.join(', ');
+            _goalsController.text = appUser.healthGoals.length >= 3
+                ? appUser.healthGoals.sublist(0, 3).join(', ')
+                : appUser.healthGoals.join(', ');
           }
           return Padding(
             padding: const EdgeInsets.all(24.0),
@@ -717,6 +783,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                         .where((e) => e.isNotEmpty)
                                         .toList(),
                                   );
+                                  // Ensure uid is set correctly
+                                  if (user.uid.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('User ID is empty. Cannot save profile.'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    setState(() {
+                                      _saving = false;
+                                    });
+                                    return;
+                                  }
                                   final result = await ref
                                       .read(firestoreServiceProvider)
                                       .setUser(updated);
@@ -725,7 +804,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                     _editing = false;
                                     _feedback = result.error ?? 'Profile updated!';
                                   });
-                                  // ignore: unused_result
                                   ref.refresh(userProvider);
                                   if (result.error != null) {
                                     ScaffoldMessenger.of(context)
@@ -776,6 +854,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       setState(() {
                         _editing = true;
                         _feedback = null;
+                        _nameController.text = user.name;
+                        _dietaryController.text = user.dietaryNeeds.join(', ');
+                        _goalsController.text = user.healthGoals.join(', ');
                       });
                     },
                     child: const Text('Edit Profile'),

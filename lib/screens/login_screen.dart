@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nutrisync/providers/providers.dart';
+import 'package:nutrisync/screens/signup_screen.dart';
 
 /// LoginScreen provides login and signup forms, with loading and error feedback.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -64,25 +65,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _handleSignUp() async {
+  Future<void> _handleGoogleSignIn() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
     final authService = ref.read(authServiceProvider);
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    if (email.isEmpty || password.isEmpty) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Email and password are required.';
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email and password are required.'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-    final result = await authService.signUpWithEmail(email, password);
+    final result = await authService.signInWithGoogle();
     if (result.error != null) {
       setState(() {
         _isLoading = false;
@@ -96,10 +85,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _isLoading = false;
         _errorMessage = null;
       });
-      _emailController.clear();
-      _passwordController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Signup successful!'), backgroundColor: Colors.green),
+        const SnackBar(content: Text('Google sign in successful!'), backgroundColor: Colors.green),
       );
     }
   }
@@ -121,7 +108,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Image.asset(
-                    'assets/logo.png', // Place your logo at assets/logo.png
+                    'images/crate a app icon for nutrisync app_1 -  personalized food_diet app.jpg', // Using existing app icon
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) => Icon(Icons.restaurant, size: 48, color: Colors.green[700]),
                   ),
@@ -161,11 +148,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           suffixIcon: IconButton(
                             icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
                             onPressed: () {
-                              setState(() => _obscurePassword = !_obscurePassword);
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
                             },
                           ),
                         ),
-                        obscureText: _obscurePassword,
+                        obscureText: _obscurePassword ?? true,
                       ),
                       const SizedBox(height: 12),
                       if (_errorMessage != null)
@@ -193,7 +182,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           side: const BorderSide(color: Color(0xFF2D5B42)),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        onPressed: _isLoading ? null : _handleSignUp,
+                        onPressed: _isLoading ? null : () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const SignupScreen()),
+                          );
+                        },
                         child: const Text('Sign Up', style: TextStyle(fontSize: 16, color: Color(0xFF2D5B42))),
                       ),
                       const SizedBox(height: 18),
@@ -212,13 +205,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
-                            icon: Image.asset('assets/google.png', height: 28, width: 28, errorBuilder: (c, e, s) => Icon(Icons.g_mobiledata, color: Colors.red, size: 28)),
-                            onPressed: () {}, // TODO: Implement Google login
+                            icon: Image.asset('images/goolge logo.png', height: 28, width: 28, errorBuilder: (c, e, s) => Icon(Icons.g_mobiledata, color: Colors.red, size: 28)),
+                            onPressed: _isLoading ? null : _handleGoogleSignIn,
                             tooltip: 'Google',
                           ),
                           const SizedBox(width: 16),
                           IconButton(
-                            icon: Image.asset('assets/apple.png', height: 28, width: 28, errorBuilder: (c, e, s) => Icon(Icons.apple, color: Colors.black, size: 28)),
+                            icon: Image.asset('images/apple logo.png', height: 28, width: 28, errorBuilder: (c, e, s) => Icon(Icons.apple, color: Colors.black, size: 28)),
                             onPressed: () {}, // TODO: Implement Apple login
                             tooltip: 'Apple',
                           ),

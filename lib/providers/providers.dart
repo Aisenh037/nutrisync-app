@@ -41,10 +41,27 @@ final authStateProvider = StreamProvider<User?>((ref) {
 });
 
 /// Provides the current user's profile from Firestore as an AsyncValue<UserModel?>.
+/// If the user document does not exist, creates a new user document with default values.
 final userProvider = FutureProvider<UserModel?>((ref) async {
   final user = ref.watch(authStateProvider).asData?.value;
   if (user == null) return null;
   final firestore = ref.watch(firestoreServiceProvider);
   final result = await firestore.getUser(user.uid);
+  if (result.data == null) {
+    // Create a new user document with default values
+    final newUser = UserModel(
+      uid: user.uid,
+      name: user.displayName ?? '',
+      email: user.email ?? '',
+      dietaryNeeds: [],
+      healthGoals: [],
+    );
+    final setResult = await firestore.setUser(newUser);
+    if (setResult.error != null) {
+      // Log or handle error as needed
+      return null;
+    }
+    return newUser;
+  }
   return result.data;
 });
