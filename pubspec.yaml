@@ -15,22 +15,36 @@ dependencies:
   firebase_auth: ^5.1.0
   cloud_firestore: ^5.0.1
   google_sign_in: ^6.2.1
+  google_sign_in_web: ^0.12.0+2
   cupertino_icons: ^1.0.2
+  http: ^0.13.6
+  permission_handler: ^11.3.1
+  speech_to_text: ^6.6.1
+  just_audio: ^0.9.39
+  geolocator: ^12.0.0
+  google_maps_webservice: ^0.0.20-nullsafety.5
+  google_maps_flutter: ^2.6.1
+  url_launcher: ^6.2.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/nutrisync_icon.jpg"
 
 flutter:
   uses-material-design: true
 
   # --- App Assets ---
   assets:
-    - assets/images/crate a app icon for nutrisync app_1 -  personalized food_diet app.jpg
-    - assets/images/goolge logo.png
-    - assets/images/apple logo.png
-
+    - assets/images/nutrisync_icon.jpg
+    - assets/images/google_logo.png
+    - assets/images/apple_logo.png
 
   # --- Custom Fonts ---
   fonts:

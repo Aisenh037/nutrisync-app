@@ -6,12 +6,17 @@ import 'package:go_router/go_router.dart';
 
 import 'firebase_options.dart';
 import 'screens/auth_gate.dart';
+import 'screens/ai_assistant_screen.dart';
 
 final _router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
       builder: (context, state) => const AuthGate(),
+    ),
+    GoRoute(
+      path: '/ai-assistant',
+      builder: (context, state) => const AiAssistantScreen(),
     ),
   ],
 );

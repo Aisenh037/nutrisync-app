@@ -47,7 +47,7 @@ void main() {
         ),
       );
   await tester.pumpAndSettle(const Duration(seconds: 5));
-  debugPrint('Widget tree: ' + tester.element(find.byType(MaterialApp)).toStringDeep());
+  debugPrint('Widget tree: ${tester.element(find.byType(MaterialApp)).toStringDeep()}');
   // Check for login screen widgets
   expect(find.text('Welcome to NutriSync'), findsOneWidget);
   expect(find.text('Email'), findsOneWidget);

@@ -107,11 +107,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 backgroundColor: Colors.white,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Image.asset(
-                    'images/crate a app icon for nutrisync app_1 -  personalized food_diet app.jpg', // Using existing app icon
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Icon(Icons.restaurant, size: 48, color: Colors.green[700]),
-                  ),
+                  child: Icon(Icons.restaurant_menu, size: 48, color: Colors.green[700]),
                 ),
               ),
               const SizedBox(height: 16),
@@ -190,8 +186,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: const Text('Sign Up', style: TextStyle(fontSize: 16, color: Color(0xFF2D5B42))),
                       ),
                       const SizedBox(height: 18),
-                      Row(
-                        children: const [
+                      const Row(
+                        children: [
                           Expanded(child: Divider()),
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -205,13 +201,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
-                            icon: Image.asset('images/goolge logo.png', height: 28, width: 28, errorBuilder: (c, e, s) => Icon(Icons.g_mobiledata, color: Colors.red, size: 28)),
+                            icon: Image.asset('assets/images/google_logo.png', height: 28, width: 28, errorBuilder: (c, e, s) => const Icon(Icons.g_mobiledata, color: Colors.red, size: 28)),
                             onPressed: _isLoading ? null : _handleGoogleSignIn,
                             tooltip: 'Google',
                           ),
                           const SizedBox(width: 16),
                           IconButton(
-                            icon: Image.asset('images/apple logo.png', height: 28, width: 28, errorBuilder: (c, e, s) => Icon(Icons.apple, color: Colors.black, size: 28)),
+                            icon: Image.asset('assets/images/apple_logo.png', height: 28, width: 28, errorBuilder: (c, e, s) => const Icon(Icons.apple, color: Colors.black, size: 28)),
                             onPressed: () {}, // TODO: Implement Apple login
                             tooltip: 'Apple',
                           ),

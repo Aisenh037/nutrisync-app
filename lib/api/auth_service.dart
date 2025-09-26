@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// A result class for authentication actions, containing either a user or an error message.
 class AuthResult {
@@ -42,9 +43,12 @@ class AuthService {
     }
   }
 
-  /// Sign in with Google.
+  /// Sign in with Google for non-web platforms.
   /// Returns [AuthResult] with user or error message.
   Future<AuthResult> signInWithGoogle() async {
+    if (kIsWeb) {
+      return AuthResult(error: 'Use the Google button for web sign-in');
+    }
     try {
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
@@ -60,6 +64,26 @@ class AuthService {
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
+      );
+
+      // Once signed in, return the UserCredential
+      final result = await _auth.signInWithCredential(credential);
+      return AuthResult(user: result.user);
+    } on FirebaseAuthException catch (e) {
+      return AuthResult(error: e.message ?? 'Google sign in failed');
+    } catch (e) {
+      return AuthResult(error: 'Google sign in failed: $e');
+    }
+  }
+
+  /// Sign in with Google tokens for web platform.
+  /// This is called from the web button callback with accessToken and idToken.
+  Future<AuthResult> signInWithGoogleTokens(String accessToken, String idToken) async {
+    try {
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: accessToken,
+        idToken: idToken,
       );
 
       // Once signed in, return the UserCredential

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/providers.dart';
 
 class MainScreen extends StatefulWidget {
@@ -368,8 +369,8 @@ class HomePage extends ConsumerWidget {
                             fontSize: 24, fontWeight: FontWeight.bold)),
                   if (user == null) const Text('No user data found.'),
                   const SizedBox(height: 24),
-                  Text("Today's Meal Plan:",
-                      style: const TextStyle(
+                  const Text("Today's Meal Plan:",
+                      style: TextStyle(
                           fontSize: 18, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 12),
                   Card(
@@ -401,8 +402,8 @@ class HomePage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Text("Your Grocery List:",
-                      style: const TextStyle(
+                  const Text("Your Grocery List:",
+                      style: TextStyle(
                           fontSize: 18, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 12),
                   Card(
@@ -429,6 +430,18 @@ class HomePage extends ConsumerWidget {
                             ],
                           );
                         },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.go('/ai-assistant'),
+                      icon: const Icon(Icons.smart_toy),
+                      label: const Text('Ask AI Assistant'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2D5B42),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       ),
                     ),
                   ),
@@ -564,7 +577,7 @@ class _MealPlanPageState extends ConsumerState<MealPlanPage> {
                 Expanded(
                   flex: 2,
                   child: DropdownButtonFormField<String>(
-                    value: _selectedDay,
+                    initialValue: _selectedDay,
                     decoration: const InputDecoration(labelText: 'Select Day'),
                     items: _days.map((day) {
                       return DropdownMenuItem<String>(
