@@ -1,0 +1,13 @@
+#include "Generated.xcconfig"
+
+// Production Environment Configuration
+PRODUCT_BUNDLE_IDENTIFIER = com.example.nutrisync
+PRODUCT_NAME = NutriSync
+FLUTTER_BUILD_NAME = 1.0.0
+DEVELOPMENT_TEAM = YOUR_TEAM_ID
+
+// Firebase Configuration
+FIREBASE_PLIST_PATH = Firebase/Production/GoogleService-Info.plist
+
+// Production specific settings
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) PRODUCTION=1

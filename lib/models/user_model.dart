@@ -1,12 +1,33 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Example UserModel class. Replace fields as needed.
+/// Comprehensive user profile model for voice-first AI agent
 class UserModel {
   final String uid;
   final String name;
   final String email;
   final List<String> dietaryNeeds;
   final List<String> healthGoals;
+  
+  // Extended profile fields for voice-first AI agent
+  final int? age;
+  final String? gender;
+  final double? height; // in cm
+  final double? weight; // in kg
+  final String? activityLevel; // sedentary, light, moderate, active, very_active
+  final List<String> medicalConditions;
+  final List<String> allergies;
+  final List<String> foodDislikes;
+  final String? preferredLanguage; // hindi, english, hinglish
+  final Map<String, dynamic> culturalPreferences; // regional cuisine preferences
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  
+  // Subscription and usage tracking
+  final String subscriptionTier; // free, premium
+  final DateTime? subscriptionExpiresAt;
+  final int dailyQueriesUsed;
+  final int monthlyQueriesLimit;
+  final DateTime? lastQueryResetDate;
 
   UserModel({
     required this.uid,
@@ -14,6 +35,23 @@ class UserModel {
     required this.email,
     this.dietaryNeeds = const [],
     this.healthGoals = const [],
+    this.age,
+    this.gender,
+    this.height,
+    this.weight,
+    this.activityLevel,
+    this.medicalConditions = const [],
+    this.allergies = const [],
+    this.foodDislikes = const [],
+    this.preferredLanguage = 'hinglish',
+    this.culturalPreferences = const {},
+    this.createdAt,
+    this.updatedAt,
+    this.subscriptionTier = 'free',
+    this.subscriptionExpiresAt,
+    this.dailyQueriesUsed = 0,
+    this.monthlyQueriesLimit = 50, // Default for free tier
+    this.lastQueryResetDate,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +61,23 @@ class UserModel {
       'email': email,
       'dietaryNeeds': dietaryNeeds,
       'healthGoals': healthGoals,
+      'age': age,
+      'gender': gender,
+      'height': height,
+      'weight': weight,
+      'activityLevel': activityLevel,
+      'medicalConditions': medicalConditions,
+      'allergies': allergies,
+      'foodDislikes': foodDislikes,
+      'preferredLanguage': preferredLanguage,
+      'culturalPreferences': culturalPreferences,
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+      'subscriptionTier': subscriptionTier,
+      'subscriptionExpiresAt': subscriptionExpiresAt?.toIso8601String(),
+      'dailyQueriesUsed': dailyQueriesUsed,
+      'monthlyQueriesLimit': monthlyQueriesLimit,
+      'lastQueryResetDate': lastQueryResetDate?.toIso8601String(),
     };
   }
 
@@ -33,6 +88,23 @@ class UserModel {
       email: map['email'] ?? '',
       dietaryNeeds: (map['dietaryNeeds'] as List?)?.map((e) => e.toString()).toList() ?? [],
       healthGoals: (map['healthGoals'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      age: map['age']?.toInt(),
+      gender: map['gender'],
+      height: map['height']?.toDouble(),
+      weight: map['weight']?.toDouble(),
+      activityLevel: map['activityLevel'],
+      medicalConditions: (map['medicalConditions'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      allergies: (map['allergies'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      foodDislikes: (map['foodDislikes'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      preferredLanguage: map['preferredLanguage'] ?? 'hinglish',
+      culturalPreferences: Map<String, dynamic>.from(map['culturalPreferences'] ?? {}),
+      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']) : null,
+      updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
+      subscriptionTier: map['subscriptionTier'] ?? 'free',
+      subscriptionExpiresAt: map['subscriptionExpiresAt'] != null ? DateTime.parse(map['subscriptionExpiresAt']) : null,
+      dailyQueriesUsed: map['dailyQueriesUsed'] ?? 0,
+      monthlyQueriesLimit: map['monthlyQueriesLimit'] ?? 50,
+      lastQueryResetDate: map['lastQueryResetDate'] != null ? DateTime.parse(map['lastQueryResetDate']) : null,
     );
   }
 
@@ -41,6 +113,23 @@ class UserModel {
     String? email,
     List<String>? dietaryNeeds,
     List<String>? healthGoals,
+    int? age,
+    String? gender,
+    double? height,
+    double? weight,
+    String? activityLevel,
+    List<String>? medicalConditions,
+    List<String>? allergies,
+    List<String>? foodDislikes,
+    String? preferredLanguage,
+    Map<String, dynamic>? culturalPreferences,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    String? subscriptionTier,
+    DateTime? subscriptionExpiresAt,
+    int? dailyQueriesUsed,
+    int? monthlyQueriesLimit,
+    DateTime? lastQueryResetDate,
   }) {
     return UserModel(
       uid: uid,
@@ -48,7 +137,89 @@ class UserModel {
       email: email ?? this.email,
       dietaryNeeds: dietaryNeeds ?? this.dietaryNeeds,
       healthGoals: healthGoals ?? this.healthGoals,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
+      height: height ?? this.height,
+      weight: weight ?? this.weight,
+      activityLevel: activityLevel ?? this.activityLevel,
+      medicalConditions: medicalConditions ?? this.medicalConditions,
+      allergies: allergies ?? this.allergies,
+      foodDislikes: foodDislikes ?? this.foodDislikes,
+      preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+      culturalPreferences: culturalPreferences ?? this.culturalPreferences,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      subscriptionTier: subscriptionTier ?? this.subscriptionTier,
+      subscriptionExpiresAt: subscriptionExpiresAt ?? this.subscriptionExpiresAt,
+      dailyQueriesUsed: dailyQueriesUsed ?? this.dailyQueriesUsed,
+      monthlyQueriesLimit: monthlyQueriesLimit ?? this.monthlyQueriesLimit,
+      lastQueryResetDate: lastQueryResetDate ?? this.lastQueryResetDate,
     );
+  }
+
+  /// Calculate BMI if height and weight are available
+  double? get bmi {
+    if (height != null && weight != null && height! > 0) {
+      final heightInMeters = height! / 100;
+      return weight! / (heightInMeters * heightInMeters);
+    }
+    return null;
+  }
+
+  /// Get BMI category
+  String? get bmiCategory {
+    final bmiValue = bmi;
+    if (bmiValue == null) return null;
+    
+    if (bmiValue < 18.5) return 'Underweight';
+    if (bmiValue < 25) return 'Normal weight';
+    if (bmiValue < 30) return 'Overweight';
+    return 'Obese';
+  }
+
+  /// Check if user has premium subscription
+  bool get isPremium {
+    if (subscriptionTier != 'premium') return false;
+    if (subscriptionExpiresAt == null) return true; // Lifetime premium
+    return DateTime.now().isBefore(subscriptionExpiresAt!);
+  }
+
+  /// Check if user has reached query limit
+  bool get hasReachedQueryLimit {
+    return dailyQueriesUsed >= monthlyQueriesLimit;
+  }
+
+  /// Get remaining queries for the month
+  int get remainingQueries {
+    return (monthlyQueriesLimit - dailyQueriesUsed).clamp(0, monthlyQueriesLimit);
+  }
+
+  /// Check if user has specific medical condition
+  bool hasMedicalCondition(String condition) {
+    return medicalConditions.any((c) => c.toLowerCase() == condition.toLowerCase());
+  }
+
+  /// Check if user has specific allergy
+  bool hasAllergy(String allergen) {
+    return allergies.any((a) => a.toLowerCase() == allergen.toLowerCase());
+  }
+
+  /// Check if user dislikes specific food
+  bool dislikesFood(String food) {
+    return foodDislikes.any((f) => f.toLowerCase() == food.toLowerCase());
+  }
+
+  /// Get user's preferred regional cuisine
+  String get preferredRegionalCuisine {
+    return culturalPreferences['preferredRegion'] ?? 'North Indian';
+  }
+
+  /// Check if profile is complete enough for personalized recommendations
+  bool get isProfileComplete {
+    return age != null && 
+           gender != null && 
+           healthGoals.isNotEmpty && 
+           (height != null || weight != null);
   }
 }
 

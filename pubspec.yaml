@@ -25,12 +25,23 @@ dependencies:
   google_maps_webservice: ^0.0.20-nullsafety.5
   google_maps_flutter: ^2.6.1
   url_launcher: ^6.2.2
+  # Voice-First AI Agent dependencies
+  record: ^5.0.4
+  path_provider: ^2.1.2
+  uuid: ^4.3.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
   flutter_launcher_icons: ^0.13.1
+  fake_cloud_firestore: ^3.1.0
+  # Testing dependencies
+  mockito: ^5.4.4
+  build_runner: ^2.4.9
+  integration_test:
+    sdk: flutter
+  test: ^1.24.9
 
 flutter_icons:
   android: true
@@ -45,6 +56,7 @@ flutter:
     - assets/images/nutrisync_icon.jpg
     - assets/images/google_logo.png
     - assets/images/apple_logo.png
+    - assets/config/environments/
 
   # --- Custom Fonts ---
   fonts:

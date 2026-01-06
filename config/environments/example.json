@@ -1,0 +1,24 @@
+{
+  "firebase": {
+    "projectId": "your-firebase-project-id",
+    "apiKey": "your-firebase-api-key",
+    "authDomain": "your-project.firebaseapp.com",
+    "storageBucket": "your-project.appspot.com",
+    "messagingSenderId": "123456789",
+    "appId": "1:123456789:web:abcdef123456"
+  },
+  "features": {
+    "enableAnalytics": true,
+    "enableCrashlytics": true,
+    "debugMode": false
+  },
+  "api": {
+    "baseUrl": "https://your-api-domain.com",
+    "timeout": 30000
+  },
+  "app": {
+    "name": "NutriSync",
+    "version": "1.0.0",
+    "environment": "development"
+  }
+}

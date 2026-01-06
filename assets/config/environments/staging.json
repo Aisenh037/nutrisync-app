@@ -1,0 +1,42 @@
+{
+  "firebase": {
+    "projectId": "nutrisync-staging",
+    "apiKey": "AIzaSyDemo-Staging-Key",
+    "authDomain": "nutrisync-staging.firebaseapp.com",
+    "storageBucket": "nutrisync-staging.appspot.com",
+    "messagingSenderId": "987654321",
+    "appId": "1:987654321:web:staging"
+  },
+  "features": {
+    "enableAnalytics": true,
+    "enableCrashlytics": true,
+    "debugMode": false,
+    "enableVoiceFeatures": true,
+    "enablePremiumFeatures": true,
+    "enableTestData": false,
+    "enableMockServices": false
+  },
+  "api": {
+    "baseUrl": "https://us-central1-nutrisync-staging.cloudfunctions.net",
+    "timeout": 30000,
+    "retryAttempts": 3,
+    "enableLogging": false
+  },
+  "app": {
+    "name": "NutriSync Staging",
+    "version": "1.0.0-staging",
+    "buildNumber": "1",
+    "environment": "staging"
+  },
+  "ai": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "maxTokens": 2000,
+    "temperature": 0.7
+  },
+  "database": {
+    "enableOfflineSupport": true,
+    "cacheSizeBytes": 104857600,
+    "enablePersistence": true
+  }
+}

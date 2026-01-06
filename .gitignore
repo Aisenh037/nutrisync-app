@@ -18,7 +18,10 @@ migrate_working_dir/
 *.iws
 .idea/
 
-#.vscode/
+# Visual Studio Code
+.vscode/settings.json
+.vscode/launch.json
+*.code-workspace
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -40,7 +43,108 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/.gradle/
+/android/.kotlin/
+/android/local.properties
 
-# --- ADD THIS LINE ---
-# Secrets and configuration files that should not be in version control
+# Firebase and Secrets - CRITICAL SECURITY
 lib/firebase_options.dart
+google-services.json
+GoogleService-Info.plist
+.firebaserc
+firebase-debug.log
+firebase-debug.*.log
+service-account*.json
+**/service-account*.json
+
+# iOS specific secrets
+ios/Runner/GoogleService-Info.plist
+ios/Firebase/*/GoogleService-Info.plist
+!ios/Firebase/*/GoogleService-Info.example.plist
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/flutter_export_environment.sh
+*.ipa
+*.xcarchive
+*.dSYM.zip
+
+# Environment and Configuration Files
+.env
+.env.*
+!.env.example
+config/secrets/
+!config/secrets/*.example.*
+!config/secrets/README.md
+config/environments/*.json
+!config/environments/example.json
+
+# CI/CD and Deployment secrets
+keystore.jks
+key.properties
+upload-keystore.jks
+android/key.properties
+android/app/upload-keystore.jks
+android/app/keystore.jks
+
+# Node.js (for Firebase Functions)
+functions/node_modules/
+functions/.env
+functions/lib/
+functions/serviceAccountKey.json
+
+# Build outputs and temporary files
+build/
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Flutter Web
+/web/firebase-config.js
+
+# Coverage reports
+coverage/
+test/coverage/
+lcov.info
+
+# Firebase cache
+.firebase/
+
+# Git filter-repo artifacts (cleanup artifacts)
+.git/filter-repo/
+
+# Platform specific build artifacts
+/linux/flutter/ephemeral/
+/macos/Flutter/ephemeral/
+/windows/flutter/ephemeral/
+
+# Additional security exclusions
+*.p12
+*.mobileprovision
+*.provisionprofile
+*.certSigningRequest
+*.cer
+*.crt
+*.key
+*.pem
+
+# Backup files
+*.bak
+*.backup
+*~

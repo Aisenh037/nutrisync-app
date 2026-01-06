@@ -435,14 +435,29 @@ class HomePage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
                   Center(
-                    child: ElevatedButton.icon(
-                      onPressed: () => context.go('/ai-assistant'),
-                      icon: const Icon(Icons.smart_toy),
-                      label: const Text('Ask AI Assistant'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2D5B42),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
+                    child: Column(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () => context.go('/ai-assistant'),
+                          icon: const Icon(Icons.smart_toy),
+                          label: const Text('Ask AI Assistant'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2D5B42),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          onPressed: () => context.go('/voice-ai-assistant'),
+                          icon: const Icon(Icons.mic),
+                          label: const Text('Voice AI Assistant (New!)'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green[600],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

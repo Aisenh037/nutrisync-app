@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for NutriSync
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Users can upload and access their own profile pictures
+    match /users/{userId}/profile/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Users can upload and access their own meal photos
+    match /users/{userId}/meals/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Users can upload and access their own voice recordings
+    match /users/{userId}/voice/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Public food images - read-only for all authenticated users
+    match /public/foods/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only admins can upload
+    }
+    
+    // Public cooking education images - read-only for all authenticated users
+    match /public/education/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only admins can upload
+    }
+  }
+}

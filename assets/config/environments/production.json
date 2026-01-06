@@ -1,0 +1,42 @@
+{
+  "firebase": {
+    "projectId": "nutrisyncapp-97089",
+    "apiKey": "AIzaSyDemo-Production-Key",
+    "authDomain": "nutrisyncapp-97089.firebaseapp.com",
+    "storageBucket": "nutrisyncapp-97089.appspot.com",
+    "messagingSenderId": "555666777",
+    "appId": "1:555666777:web:production"
+  },
+  "features": {
+    "enableAnalytics": true,
+    "enableCrashlytics": true,
+    "debugMode": false,
+    "enableVoiceFeatures": true,
+    "enablePremiumFeatures": true,
+    "enableTestData": false,
+    "enableMockServices": false
+  },
+  "api": {
+    "baseUrl": "https://us-central1-nutrisyncapp-97089.cloudfunctions.net",
+    "timeout": 30000,
+    "retryAttempts": 5,
+    "enableLogging": false
+  },
+  "app": {
+    "name": "NutriSync",
+    "version": "1.0.0",
+    "buildNumber": "1",
+    "environment": "production"
+  },
+  "ai": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "maxTokens": 2000,
+    "temperature": 0.7
+  },
+  "database": {
+    "enableOfflineSupport": true,
+    "cacheSizeBytes": 52428800,
+    "enablePersistence": true
+  }
+}

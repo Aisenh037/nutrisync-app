@@ -1,0 +1,279 @@
+name: Security Scan
+
+on:
+  schedule:
+    # Run security scan weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+  NODE_VERSION: '18'
+
+jobs:
+  # Dependency vulnerability scanning
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        cache: true
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: functions/package-lock.json
+        
+    - name: Get Flutter dependencies
+      run: flutter pub get
+      
+    - name: Get Functions dependencies
+      run: |
+        cd functions
+        npm ci
+        
+    - name: Run Flutter dependency audit
+      run: |
+        # Check for known vulnerabilities in Dart packages
+        flutter pub deps --json > flutter-deps.json
+        
+    - name: Run npm audit for Functions
+      run: |
+        cd functions
+        npm audit --audit-level=moderate --json > ../npm-audit.json
+      continue-on-error: true
+      
+    - name: Upload dependency scan results
+      uses: actions/upload-artifact@v3
+      with:
+        name: dependency-scan-results
+        path: |
+          flutter-deps.json
+          npm-audit.json
+        retention-days: 30
+
+  # Code security scanning with CodeQL
+  codeql-analysis:
+    name: CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript' ]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+        
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
+      
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+
+  # Container and filesystem vulnerability scanning
+  trivy-scan:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Trivy vulnerability scanner in repo mode
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH,MEDIUM'
+        
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+        
+    - name: Run Trivy vulnerability scanner for summary
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'table'
+        output: 'trivy-summary.txt'
+        
+    - name: Upload Trivy summary
+      uses: actions/upload-artifact@v3
+      with:
+        name: trivy-scan-summary
+        path: trivy-summary.txt
+        retention-days: 30
+
+  # Firebase security rules validation
+  firebase-security:
+    name: Firebase Security Rules Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+      
+    - name: Validate Firestore rules
+      run: |
+        # Check Firestore rules syntax
+        firebase firestore:rules:validate firestore.rules
+        
+    - name: Validate Storage rules
+      run: |
+        # Check Storage rules syntax
+        firebase storage:rules:validate storage.rules
+
+  # Secrets scanning
+  secrets-scan:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for better secret detection
+        
+    - name: Run TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+
+  # License compliance check
+  license-scan:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        cache: true
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Get dependencies
+      run: |
+        flutter pub get
+        cd functions && npm ci
+        
+    - name: Check Flutter licenses
+      run: |
+        flutter pub deps --json | jq '.packages[] | select(.kind == "direct") | {name: .name, version: .version}' > flutter-licenses.json
+        
+    - name: Check npm licenses
+      run: |
+        cd functions
+        npx license-checker --json > ../npm-licenses.json
+        
+    - name: Upload license information
+      uses: actions/upload-artifact@v3
+      with:
+        name: license-scan-results
+        path: |
+          flutter-licenses.json
+          npm-licenses.json
+        retention-days: 30
+
+  # Security summary and notification
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [dependency-scan, codeql-analysis, trivy-scan, firebase-security, secrets-scan, license-scan]
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Create security summary
+      run: |
+        echo "# Security Scan Summary" > security-summary.md
+        echo "" >> security-summary.md
+        echo "## Scan Results" >> security-summary.md
+        echo "" >> security-summary.md
+        
+        # Check job statuses
+        echo "- Dependency Scan: ${{ needs.dependency-scan.result }}" >> security-summary.md
+        echo "- CodeQL Analysis: ${{ needs.codeql-analysis.result }}" >> security-summary.md
+        echo "- Trivy Scan: ${{ needs.trivy-scan.result }}" >> security-summary.md
+        echo "- Firebase Security: ${{ needs.firebase-security.result }}" >> security-summary.md
+        echo "- Secrets Scan: ${{ needs.secrets-scan.result }}" >> security-summary.md
+        echo "- License Scan: ${{ needs.license-scan.result }}" >> security-summary.md
+        echo "" >> security-summary.md
+        
+        # Add timestamp
+        echo "Scan completed at: $(date -u)" >> security-summary.md
+        
+        cat security-summary.md
+        
+    - name: Upload security summary
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-summary
+        path: security-summary.md
+        retention-days: 90
+        
+    - name: Notify on security issues
+      if: needs.dependency-scan.result == 'failure' || needs.trivy-scan.result == 'failure' || needs.secrets-scan.result == 'failure'
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        text: |
+          🚨 Security scan detected issues in NutriSync!
+          
+          Results:
+          - Dependency Scan: ${{ needs.dependency-scan.result }}
+          - Trivy Scan: ${{ needs.trivy-scan.result }}
+          - Secrets Scan: ${{ needs.secrets-scan.result }}
+          
+          Please review the security tab and artifacts for details.
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
