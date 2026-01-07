@@ -242,11 +242,56 @@ jobs:
     - name: Get dependencies
       run: flutter pub get
       
-    - name: Build APK (unsigned for CI)
+    - name: Build APK (universal)
       run: flutter build apk --release
       
-    - name: Upload APK artifact
+    - name: Build APK (split per ABI)
+      run: flutter build apk --release --split-per-abi
+      
+    - name: Rename APK files
+      run: |
+        mkdir -p build/apk-release
+        cp build/app/outputs/flutter-apk/app-release.apk build/apk-release/nutrisync-universal.apk
+        if [ -f build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ]; then
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/apk-release/nutrisync-arm64.apk
+        fi
+        if [ -f build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ]; then
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/apk-release/nutrisync-arm32.apk
+        fi
+        if [ -f build/app/outputs/flutter-apk/app-x86_64-release.apk ]; then
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk build/apk-release/nutrisync-x86_64.apk
+        fi
+      
+    - name: Upload APK artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: android-apk
-        path: build/app/outputs/flutter-apk/app-release.apk
+        name: android-apks
+        path: build/apk-release/*.apk
+        
+    - name: Upload APKs to Release
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/apk-release/*.apk
+        body: |
+          📱 **Android APK Files**
+          
+          Download and install directly on your Android device:
+          
+          - **nutrisync-universal.apk** - Works on all Android devices (recommended)
+          - **nutrisync-arm64.apk** - For modern 64-bit devices (smaller size)
+          - **nutrisync-arm32.apk** - For older 32-bit devices
+          - **nutrisync-x86_64.apk** - For x86 devices (emulators)
+          
+          **Installation Instructions:**
+          1. Download the APK file to your Android device
+          2. Enable "Install from Unknown Sources" in Settings > Security
+          3. Tap the APK file to install
+          4. Enjoy NutriSync! 🎉
+          
+          **Features:**
+          - Voice-first AI nutrition assistant
+          - Indian cooking education
+          - Personalized food recommendations
+          - Hinglish language support
+          - Cultural dietary guidance

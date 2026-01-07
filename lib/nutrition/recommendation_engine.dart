@@ -1,29 +1,31 @@
 import 'nutrition_intelligence_core.dart';
+import 'meal_data_models.dart';
 import '../voice/hinglish_processor.dart';
+import '../models/user_model.dart';
 
 /// Personalized meal and nutrition recommendation engine
 /// Considers user goals, medical conditions, and eating patterns
 class RecommendationEngine {
   /// Generate personalized food recommendations
-  Future<List<FoodRecommendation>> generateFoodRecommendations(UserProfile profile) async {
+  Future<List<FoodRecommendation>> generateFoodRecommendations(UserModel profile) async {
     // Implementation will be added in subsequent tasks
     throw UnimplementedError('Food recommendations not yet implemented');
   }
 
   /// Suggest portion sizes based on user goals
-  PortionSuggestion suggestPortionSize(FoodItem food, UserProfile profile) {
+  PortionSuggestion suggestPortionSize(FoodItem food, UserModel profile) {
     // Implementation will be added in subsequent tasks
     throw UnimplementedError('Portion size suggestions not yet implemented');
   }
 
   /// Analyze nutritional balance and suggest complementary foods
-  Future<BalanceAnalysis> analyzeNutritionalBalance(MealData meal, UserProfile profile) async {
+  Future<BalanceAnalysis> analyzeNutritionalBalance(MealData meal, UserModel profile) async {
     // Implementation will be added in subsequent tasks
     throw UnimplementedError('Nutritional balance analysis not yet implemented');
   }
 
   /// Generate meal plan for the day
-  Future<DayMealPlan> generateDayMealPlan(UserProfile profile) async {
+  Future<DayMealPlan> generateDayMealPlan(UserModel profile) async {
     // Implementation will be added in subsequent tasks
     throw UnimplementedError('Day meal plan generation not yet implemented');
   }

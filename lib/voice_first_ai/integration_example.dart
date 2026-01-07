@@ -1,277 +1,498 @@
-/// Integration Example: Voice-First AI Agent
-/// 
-/// This example demonstrates how the voice and cultural components work together
-/// to provide a seamless Indian food tracking experience.
+import 'dart:async';
+import 'service_orchestrator.dart';
+import '../models/user_model.dart';
+import '../services/user_profile_service.dart';
 
-import '../voice/voice_interface.dart';
-import '../voice/conversation_context_manager.dart';
-import '../cultural/cultural_context_engine.dart';
-import '../cultural/indian_food_database.dart';
+/// Complete integration example demonstrating Voice-First AI Agent capabilities
+/// This example shows how all backend services work together seamlessly
+class VoiceFirstAIIntegrationExample {
+  late final VoiceFirstAIServiceOrchestrator _orchestrator;
+  late final UserProfileService _userProfileService;
+  
+  bool _isInitialized = false;
 
-class VoiceCulturalIntegrationExample {
-  final VoiceInterface _voiceInterface;
-  final ConversationContextManager _contextManager;
-  final CulturalContextEngine _culturalEngine;
-  final IndianFoodDatabase _foodDatabase;
+  /// Initialize the integration example
+  Future<bool> initialize() async {
+    try {
+      _orchestrator = VoiceFirstAIServiceOrchestrator();
+      _userProfileService = UserProfileService();
 
-  VoiceCulturalIntegrationExample({
-    required String elevenLabsApiKey,
-  }) : _voiceInterface = VoiceInterface(elevenLabsApiKey: elevenLabsApiKey),
-       _contextManager = ConversationContextManager(),
-       _culturalEngine = CulturalContextEngine(),
-       _foodDatabase = IndianFoodDatabase();
-
-  /// Demonstrates complete voice-to-nutrition workflow
-  Future<void> demonstrateVoiceToNutritionWorkflow() async {
-    print('=== Voice-First AI Agent Integration Demo ===\n');
-
-    // 1. Start voice conversation
-    print('1. Starting voice conversation...');
-    final stream = _voiceInterface.startConversation(
-      userId: 'demo_user',
-      initialContext: {
-        'userPreferences': {
-          'vegetarian': true,
-          'region': 'North India',
-          'preferred_units': 'indian',
-        },
-      },
-    );
-    print('✓ Voice conversation started with session: ${_voiceInterface.currentSessionId}\n');
-
-    // 2. Simulate Hinglish voice input
-    print('2. Processing Hinglish voice input...');
-    const hinglishInput = 'Maine lunch mein tadka dal aur 2 roti khaya';
-    print('User said: "$hinglishInput"');
-
-    // 3. Extract cultural context
-    print('\n3. Extracting cultural context...');
-    final cookingMethod = _culturalEngine.identifyCookingStyle(hinglishInput);
-    print('✓ Cooking method identified: ${cookingMethod.name} (nutrition multiplier: ${cookingMethod.nutritionMultiplier})');
-
-    final dalPortion = _culturalEngine.estimateIndianPortion('dal', '1 katori');
-    final rotiPortion = _culturalEngine.estimateIndianPortion('roti', '2');
-    print('✓ Portions estimated:');
-    print('  - Dal: ${dalPortion.quantity}g (${dalPortion.indianReference})');
-    print('  - Roti: ${rotiPortion.quantity}g (${rotiPortion.indianReference})');
-
-    // 4. Add to conversation context
-    print('\n4. Adding meal to conversation context...');
-    _voiceInterface.addMealContext({
-      'type': 'lunch',
-      'timestamp': DateTime.now().toIso8601String(),
-      'foods': [
-        {
-          'name': 'tadka dal',
-          'quantity': dalPortion.quantity,
-          'cooking_method': cookingMethod.name,
-          'calories': (150 * cookingMethod.nutritionMultiplier).round(),
-        },
-        {
-          'name': 'roti',
-          'quantity': rotiPortion.quantity,
-          'calories': 70 * 2, // 2 rotis
-        },
-      ],
-      'cultural_context': {
-        'region': 'North India',
-        'meal_pattern': 'traditional',
-        'cooking_style': cookingMethod.name,
-      },
-    });
-    print('✓ Meal context added to conversation');
-
-    // 5. Generate contextual response
-    print('\n5. Generating contextual response...');
-    final context = _voiceInterface.getConversationContext();
-    if (context != null) {
-      final sessionId = _voiceInterface.currentSessionId!;
-      final response = _contextManager.generateContextualResponse(
-        sessionId,
-        'How was my meal?',
-        'Your meal was good.',
+      // Initialize the orchestrator with ElevenLabs API key
+      // In production, this would come from secure configuration
+      final success = await _orchestrator.initialize(
+        elevenLabsApiKey: 'your-elevenlabs-api-key-here',
+        voiceId: 'pNInz6obpgDQGcFmaJgB', // Adam voice
       );
-      print('✓ Contextual response: "$response"');
+
+      if (success) {
+        _isInitialized = true;
+        print('✅ Voice-First AI Integration initialized successfully');
+        return true;
+      } else {
+        print('❌ Failed to initialize Voice-First AI Integration');
+        return false;
+      }
+    } catch (e) {
+      print('❌ Error initializing integration: $e');
+      return false;
+    }
+  }
+
+  /// Demonstrate complete meal logging workflow
+  Future<void> demonstrateMealLogging() async {
+    if (!_isInitialized) {
+      print('❌ Integration not initialized');
+      return;
     }
 
-    // 6. Demonstrate meal expansion
-    print('\n6. Suggesting meal combinations...');
-    final dalFood = FoodItem(
-      name: 'tadka dal',
-      quantity: dalPortion.quantity,
-      unit: 'grams',
-      nutrition: NutritionalInfo(
-        calories: 150.0,
-        protein: 8.0,
-        carbs: 20.0,
-        fat: 2.0,
-        fiber: 5.0,
-        vitamins: {},
-        minerals: {},
-      ),
-      context: CulturalContext(
-        region: 'North India',
-        cookingMethod: 'tadka',
-        mealType: 'lunch',
-        commonCombinations: [],
-      ),
+    print('\n🍽️ === MEAL LOGGING DEMONSTRATION ===');
+    
+    try {
+      // Create a test user
+      final testUser = await _createTestUser();
+      
+      // Start voice conversation
+      final session = await _orchestrator.startVoiceConversation(
+        userId: testUser.uid,
+        initialContext: {
+          'userPreferences': testUser.toMap(),
+          'currentGoal': 'weight_maintenance',
+        },
+      );
+
+      print('📱 Started voice conversation session: ${session.sessionId}');
+
+      // Simulate various meal logging scenarios
+      final mealInputs = [
+        'Maine breakfast mein dal paratha aur chai khayi',
+        'Lunch mein rajma chawal khaya, bahut tasty tha',
+        'Evening snack mein samosa aur chutney li',
+        'Dinner mein aloo gobi, roti aur dahi khaya',
+      ];
+
+      for (final input in mealInputs) {
+        print('\n🎤 User says: "$input"');
+        
+        final result = await _orchestrator.processVoiceInteraction(
+          userInput: input,
+          userId: testUser.uid,
+          sessionId: session.sessionId,
+        );
+
+        print('🤖 AI responds: "${result.systemResponse}"');
+        print('📊 Confidence: ${(result.confidence * 100).toStringAsFixed(1)}%');
+        
+        if (result.requiresClarification) {
+          print('❓ Needs clarification: ${result.ambiguities.map((a) => a.term).join(', ')}');
+        }
+
+        if (result.responseData.containsKey('mealData')) {
+          final mealData = result.responseData['mealData'];
+          print('✅ Meal logged successfully with ${mealData['nutrition']['totalCalories'].toStringAsFixed(0)} calories');
+        }
+
+        // Simulate voice response
+        await _orchestrator.generateAndPlayVoiceResponse(result.systemResponse);
+        
+        // Small delay to simulate natural conversation
+        await Future.delayed(const Duration(seconds: 1));
+      }
+
+      print('\n📈 Getting meal history with recommendations...');
+      final mealHistory = await _orchestrator.getMealHistoryWithRecommendations(testUser.uid);
+      
+      print('📋 Meal History: ${mealHistory.mealHistory.length} meals logged');
+      print('💡 Recommendations: ${mealHistory.recommendations.length} suggestions');
+      print('🎯 Insights: ${mealHistory.insights.join(', ')}');
+
+    } catch (e) {
+      print('❌ Error in meal logging demonstration: $e');
+    }
+  }
+
+  /// Demonstrate nutrition query processing
+  Future<void> demonstrateNutritionQueries() async {
+    if (!_isInitialized) {
+      print('❌ Integration not initialized');
+      return;
+    }
+
+    print('\n🧠 === NUTRITION QUERY DEMONSTRATION ===');
+
+    try {
+      final testUser = await _createTestUser();
+      
+      final nutritionQueries = [
+        'Dal mein kitni protein hoti hai?',
+        'Weight loss ke liye kya khana chahiye?',
+        'Diabetes mein kya avoid karna chahiye?',
+        'Protein ke liye best Indian foods kya hain?',
+        'Calcium ke liye kya khana chahiye?',
+      ];
+
+      for (final query in nutritionQueries) {
+        print('\n🎤 User asks: "$query"');
+        
+        final result = await _orchestrator.processVoiceInteraction(
+          userInput: query,
+          userId: testUser.uid,
+        );
+
+        print('🤖 AI explains: "${result.systemResponse}"');
+        print('📚 Query type: ${result.interactionType}');
+        
+        if (result.suggestions.isNotEmpty) {
+          print('💡 Suggestions: ${result.suggestions.take(3).join(', ')}');
+        }
+
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    } catch (e) {
+      print('❌ Error in nutrition query demonstration: $e');
+    }
+  }
+
+  /// Demonstrate personalized recommendations
+  Future<void> demonstrateRecommendations() async {
+    if (!_isInitialized) {
+      print('❌ Integration not initialized');
+      return;
+    }
+
+    print('\n🎯 === PERSONALIZED RECOMMENDATIONS DEMONSTRATION ===');
+
+    try {
+      // Create users with different profiles
+      final users = [
+        await _createTestUser(
+          name: 'Priya',
+          healthGoals: ['Weight loss'],
+          medicalConditions: [],
+          dietaryNeeds: ['vegetarian'],
+        ),
+        await _createTestUser(
+          name: 'Rahul',
+          healthGoals: ['Muscle building'],
+          medicalConditions: [],
+          dietaryNeeds: ['vegetarian'],
+        ),
+        await _createTestUser(
+          name: 'Sunita',
+          healthGoals: ['Health maintenance'],
+          medicalConditions: ['Diabetes'],
+          dietaryNeeds: ['vegetarian'],
+        ),
+      ];
+
+      for (final user in users) {
+        print('\n👤 User: ${user.name} (Goals: ${user.healthGoals.join(', ')})');
+        
+        final result = await _orchestrator.processVoiceInteraction(
+          userInput: 'Mere liye kya recommend karoge?',
+          userId: user.uid,
+        );
+
+        print('🤖 AI recommends: "${result.systemResponse}"');
+        
+        if (result.responseData.containsKey('recommendations')) {
+          final recommendations = result.responseData['recommendations'] as List;
+          print('📋 Specific recommendations:');
+          for (int i = 0; i < recommendations.length && i < 3; i++) {
+            final rec = recommendations[i];
+            print('   ${i + 1}. ${rec['food']} - ${rec['portion']} (${rec['calories']} cal)');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ Error in recommendations demonstration: $e');
+    }
+  }
+
+  /// Demonstrate cooking education features
+  Future<void> demonstrateCookingEducation() async {
+    if (!_isInitialized) {
+      print('❌ Integration not initialized');
+      return;
+    }
+
+    print('\n👨‍🍳 === COOKING EDUCATION DEMONSTRATION ===');
+
+    try {
+      final testUser = await _createTestUser();
+      
+      final cookingQueries = [
+        'Dal kaise banau healthy?',
+        'Sabzi mein oil kam kaise karu?',
+        'Roti soft kaise banegi?',
+        'Palak ke fayde kya hain?',
+        'Diabetes mein kya cooking tips hain?',
+      ];
+
+      for (final query in cookingQueries) {
+        print('\n🎤 User asks: "$query"');
+        
+        final result = await _orchestrator.processVoiceInteraction(
+          userInput: query,
+          userId: testUser.uid,
+        );
+
+        print('👨‍🍳 AI teaches: "${result.systemResponse}"');
+        
+        if (result.responseData.containsKey('tips')) {
+          final tips = result.responseData['tips'] as List;
+          if (tips.isNotEmpty) {
+            print('💡 Key tip: ${tips.first}');
+          }
+        }
+
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    } catch (e) {
+      print('❌ Error in cooking education demonstration: $e');
+    }
+  }
+
+  /// Demonstrate grocery management
+  Future<void> demonstrateGroceryManagement() async {
+    if (!_isInitialized) {
+      print('❌ Integration not initialized');
+      return;
+    }
+
+    print('\n🛒 === GROCERY MANAGEMENT DEMONSTRATION ===');
+
+    try {
+      final testUser = await _createTestUser();
+      
+      // First, log some meals to generate grocery list
+      final mealInputs = [
+        'Maine dal chawal khaya',
+        'Aloo sabzi bhi khayi',
+        'Roti aur dahi liya',
+      ];
+
+      print('📝 Logging meals for grocery list generation...');
+      for (final input in mealInputs) {
+        await _orchestrator.processVoiceInteraction(
+          userInput: input,
+          userId: testUser.uid,
+        );
+      }
+
+      // Generate grocery list
+      print('\n🛒 Generating grocery list...');
+      final result = await _orchestrator.processVoiceInteraction(
+        userInput: 'Grocery list banao mere liye',
+        userId: testUser.uid,
+      );
+
+      print('🤖 AI responds: "${result.systemResponse}"');
+      
+      if (result.responseData.containsKey('groceryList')) {
+        final groceryData = result.responseData['groceryList'];
+        print('💰 Estimated cost: ₹${result.responseData['totalCost'].toStringAsFixed(0)}');
+        print('📦 Total items: ${result.responseData['itemCount']}');
+      }
+
+      // Demonstrate direct grocery list generation
+      print('\n📋 Generating detailed grocery list...');
+      final groceryList = await _orchestrator.generateGroceryListFromMeals(testUser.uid);
+      
+      print('🛒 Generated grocery list with ${groceryList.categorizedItems.length} categories');
+      for (final category in groceryList.categorizedItems.keys) {
+        final items = groceryList.categorizedItems[category]!;
+        print('   ${category.toString().split('.').last}: ${items.length} items');
+      }
+
+    } catch (e) {
+      print('❌ Error in grocery management demonstration: $e');
+    }
+  }
+
+  /// Demonstrate conversation context and interruption handling
+  Future<void> demonstrateConversationContext() async {
+    if (!_isInitialized) {
+      print('❌ Integration not initialized');
+      return;
+    }
+
+    print('\n💬 === CONVERSATION CONTEXT DEMONSTRATION ===');
+
+    try {
+      final testUser = await _createTestUser();
+      
+      // Start conversation session
+      final session = await _orchestrator.startVoiceConversation(
+        userId: testUser.uid,
+      );
+
+      print('📱 Started conversation session: ${session.sessionId}');
+
+      // Multi-turn conversation
+      final conversationFlow = [
+        'Maine dal chawal khaya lunch mein',
+        'Isme kitni calories thi?',
+        'Aur protein kitni thi?',
+        'Weight loss ke liye kya suggest karoge?',
+      ];
+
+      for (int i = 0; i < conversationFlow.length; i++) {
+        final input = conversationFlow[i];
+        print('\n🎤 Turn ${i + 1}: "$input"');
+        
+        final result = await _orchestrator.processVoiceInteraction(
+          userInput: input,
+          userId: testUser.uid,
+          sessionId: session.sessionId,
+        );
+
+        print('🤖 AI responds: "${result.systemResponse}"');
+        
+        // Simulate interruption in the middle
+        if (i == 2) {
+          print('\n📞 Simulating interruption (phone call)...');
+          _orchestrator.handleInterruption(reason: 'Phone call');
+          
+          await Future.delayed(const Duration(seconds: 2));
+          
+          print('📱 Resuming conversation...');
+          final resumptionMessage = await _orchestrator.resumeConversation();
+          print('🤖 AI resumes: "$resumptionMessage"');
+        }
+
+        await Future.delayed(const Duration(milliseconds: 800));
+      }
+
+      // End conversation
+      _orchestrator.endConversation();
+      print('\n✅ Conversation ended gracefully');
+
+    } catch (e) {
+      print('❌ Error in conversation context demonstration: $e');
+    }
+  }
+
+  /// Run complete integration demonstration
+  Future<void> runCompleteDemo() async {
+    print('🚀 === VOICE-FIRST AI AGENT COMPLETE INTEGRATION DEMO ===\n');
+    
+    if (!await initialize()) {
+      print('❌ Failed to initialize. Exiting demo.');
+      return;
+    }
+
+    try {
+      await demonstrateMealLogging();
+      await Future.delayed(const Duration(seconds: 2));
+      
+      await demonstrateNutritionQueries();
+      await Future.delayed(const Duration(seconds: 2));
+      
+      await demonstrateRecommendations();
+      await Future.delayed(const Duration(seconds: 2));
+      
+      await demonstrateCookingEducation();
+      await Future.delayed(const Duration(seconds: 2));
+      
+      await demonstrateGroceryManagement();
+      await Future.delayed(const Duration(seconds: 2));
+      
+      await demonstrateConversationContext();
+      
+      print('\n🎉 === INTEGRATION DEMO COMPLETED SUCCESSFULLY ===');
+      print('✅ All backend services are properly integrated and working together!');
+      
+    } catch (e) {
+      print('❌ Error during complete demo: $e');
+    } finally {
+      dispose();
+    }
+  }
+
+  /// Create a test user for demonstrations
+  Future<UserModel> _createTestUser({
+    String name = 'Test User',
+    List<String> healthGoals = const ['Weight maintenance'],
+    List<String> medicalConditions = const [],
+    List<String> dietaryNeeds = const ['vegetarian'],
+  }) async {
+    final user = UserModel(
+      uid: 'demo-user-${DateTime.now().millisecondsSinceEpoch}',
+      email: 'demo@nutrisync.com',
+      name: name,
+      age: 28,
+      gender: 'Female',
+      height: 165.0,
+      weight: 60.0,
+      healthGoals: healthGoals,
+      medicalConditions: medicalConditions,
+      allergies: [],
+      dietaryNeeds: dietaryNeeds,
+      foodDislikes: [],
+      culturalPreferences: {
+        'preferredRegion': 'North Indian',
+        'spiceLevel': 'medium',
+      },
+      activityLevel: 'Moderate',
+      isPremium: true, // Enable all features for demo
     );
 
-    final suggestions = _culturalEngine.expandMealContext(dalFood);
-    print('✓ Meal suggestions based on cultural context:');
-    for (final suggestion in suggestions.take(3)) {
-      print('  - ${suggestion.name} (${suggestion.quantity}${suggestion.unit})');
-    }
-
-    // 7. Demonstrate regional context
-    print('\n7. Regional food context...');
-    final regionalContext = _culturalEngine.getRegionalContext('North India', 'dal');
-    print('✓ Regional context for dal in ${regionalContext.region}:');
-    print('  - Common ingredients: ${regionalContext.commonIngredients.join(', ')}');
-    print('  - Cooking style: ${regionalContext.cookingStyle.name}');
-
-    // 8. Demonstrate interruption handling
-    print('\n8. Testing conversation interruption...');
-    if (context != null) {
-      final sessionId = _voiceInterface.currentSessionId!;
-      _contextManager.handleInterruption(sessionId, reason: 'phone_call');
-      print('✓ Conversation interrupted (reason: phone_call)');
-      
-      final resumptionMessage = _contextManager.resumeConversation(sessionId);
-      print('✓ Conversation resumed: "$resumptionMessage"');
-    }
-
-    // 9. Show final context state
-    print('\n9. Final conversation state...');
-    final finalContext = _voiceInterface.getConversationContext();
-    if (finalContext != null) {
-      print('✓ Session active: ${finalContext.conversationState == ConversationState.active}');
-      print('✓ Meal context preserved: ${finalContext.currentMealContext != null}');
-      print('✓ User preferences: ${finalContext.userPreferences}');
-    }
-
-    // 10. Clean up
-    print('\n10. Cleaning up...');
-    _voiceInterface.dispose();
-    _contextManager.dispose();
-    print('✓ Resources cleaned up');
-
-    print('\n=== Integration Demo Complete ===');
-    print('✅ Voice and cultural components successfully integrated!');
+    // Save user profile
+    await _userProfileService.createUserProfile(user);
+    
+    return user;
   }
 
-  /// Demonstrates concurrent operations
-  void demonstrateConcurrentOperations() {
-    print('\n=== Concurrent Operations Demo ===');
-
-    // Multiple cultural operations
-    final cooking1 = _culturalEngine.identifyCookingStyle('tadka dal');
-    final cooking2 = _culturalEngine.identifyCookingStyle('bhuna masala');
-    final cooking3 = _culturalEngine.identifyCookingStyle('dum biryani');
-
-    print('✓ Concurrent cooking method identification:');
-    print('  - tadka dal → ${cooking1.name}');
-    print('  - bhuna masala → ${cooking2.name}');
-    print('  - dum biryani → ${cooking3.name}');
-
-    // Multiple portion estimations
-    final portion1 = _culturalEngine.estimateIndianPortion('dal', '2 katori');
-    final portion2 = _culturalEngine.estimateIndianPortion('rice', '1 plate');
-    final portion3 = _culturalEngine.estimateIndianPortion('roti', '3');
-
-    print('✓ Concurrent portion estimations:');
-    print('  - 2 katori dal → ${portion1.quantity}g');
-    print('  - 1 plate rice → ${portion2.quantity}g');
-    print('  - 3 roti → ${portion3.quantity}g');
-
-    print('✅ Concurrent operations working correctly!');
-  }
-
-  /// Demonstrates error handling
-  void demonstrateErrorHandling() {
-    print('\n=== Error Handling Demo ===');
-
-    // Test unknown cooking methods
-    final unknownCooking = _culturalEngine.identifyCookingStyle('unknown cooking method');
-    print('✓ Unknown cooking method fallback: ${unknownCooking.name}');
-
-    // Test invalid session operations
-    try {
-      _contextManager.handleInterruption('invalid_session');
-    } catch (e) {
-      print('✓ Invalid session error handled: ${e.runtimeType}');
+  /// Dispose of resources
+  void dispose() {
+    if (_isInitialized) {
+      _orchestrator.dispose();
+      _isInitialized = false;
+      print('🧹 Resources cleaned up');
     }
-
-    // Test voice interface error handling
-    try {
-      _voiceInterface.stopListening(); // Should not crash
-      print('✓ Voice interface error handling works');
-    } catch (e) {
-      print('✗ Unexpected voice interface error: $e');
-    }
-
-    print('✅ Error handling working correctly!');
   }
 }
 
-// Data classes for the example (these would normally be imported)
-class FoodItem {
-  final String name;
-  final double quantity;
-  final String unit;
-  final NutritionalInfo nutrition;
-  final CulturalContext context;
-
-  FoodItem({
-    required this.name,
-    required this.quantity,
-    required this.unit,
-    required this.nutrition,
-    required this.context,
-  });
-}
-
-class NutritionalInfo {
-  final double calories;
-  final double protein;
-  final double carbs;
-  final double fat;
-  final double fiber;
-  final Map<String, double> vitamins;
-  final Map<String, double> minerals;
-
-  NutritionalInfo({
-    required this.calories,
-    required this.protein,
-    required this.carbs,
-    required this.fat,
-    required this.fiber,
-    required this.vitamins,
-    required this.minerals,
-  });
-}
-
-class CulturalContext {
-  final String region;
-  final String cookingMethod;
-  final String mealType;
-  final List<String> commonCombinations;
-
-  CulturalContext({
-    required this.region,
-    required this.cookingMethod,
-    required this.mealType,
-    required this.commonCombinations,
-  });
-}
-
-/// Example usage
+/// Main function to run the integration example
 Future<void> main() async {
-  final example = VoiceCulturalIntegrationExample(
-    elevenLabsApiKey: 'your_elevenlabs_api_key_here',
-  );
+  final example = VoiceFirstAIIntegrationExample();
+  await example.runCompleteDemo();
+}
 
-  await example.demonstrateVoiceToNutritionWorkflow();
-  example.demonstrateConcurrentOperations();
-  example.demonstrateErrorHandling();
+/// Utility function to demonstrate specific workflow
+Future<void> demonstrateSpecificWorkflow(String workflow) async {
+  final example = VoiceFirstAIIntegrationExample();
+  
+  if (!await example.initialize()) {
+    print('❌ Failed to initialize');
+    return;
+  }
+
+  try {
+    switch (workflow.toLowerCase()) {
+      case 'meal_logging':
+        await example.demonstrateMealLogging();
+        break;
+      case 'nutrition_queries':
+        await example.demonstrateNutritionQueries();
+        break;
+      case 'recommendations':
+        await example.demonstrateRecommendations();
+        break;
+      case 'cooking_education':
+        await example.demonstrateCookingEducation();
+        break;
+      case 'grocery_management':
+        await example.demonstrateGroceryManagement();
+        break;
+      case 'conversation_context':
+        await example.demonstrateConversationContext();
+        break;
+      default:
+        print('❌ Unknown workflow: $workflow');
+        print('Available workflows: meal_logging, nutrition_queries, recommendations, cooking_education, grocery_management, conversation_context');
+    }
+  } finally {
+    example.dispose();
+  }
 }

@@ -19,16 +19,24 @@ dependencies:
   cupertino_icons: ^1.0.2
   http: ^0.13.6
   permission_handler: ^11.3.1
-  speech_to_text: ^6.6.1
+  speech_to_text: ^7.0.0
   just_audio: ^0.9.39
   geolocator: ^12.0.0
   google_maps_webservice: ^0.0.20-nullsafety.5
   google_maps_flutter: ^2.6.1
   url_launcher: ^6.2.2
   # Voice-First AI Agent dependencies
-  record: ^5.0.4
+  record: ^6.0.0
   path_provider: ^2.1.2
   uuid: ^4.3.3
+  flutter_local_notifications: ^17.2.2
+  device_calendar: ^4.3.2
+  # Email service
+  mailer: ^6.1.2
+
+dependency_overrides:
+  # Fix record_linux compatibility issue for Android builds
+  record_linux: ^1.2.0
 
 dev_dependencies:
   flutter_test:
