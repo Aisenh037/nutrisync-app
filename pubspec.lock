@@ -242,7 +242,7 @@ packages:
     source: hosted
     version: "1.15.0"
   crypto:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: crypto
       sha256: "1e445881f28f22d6140f181e07737b22f1e099a5e1ff94b0af2f9e4a463f4855"
@@ -703,6 +703,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  intl:
+    dependency: transitive
+    description:
+      name: intl
+      sha256: "3df61194eb431efc39c4ceba583b95633a403f46c9fd341e550ce0bfa50e9aa5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.20.2"
   io:
     dependency: transitive
     description:
@@ -720,13 +728,21 @@ packages:
     source: hosted
     version: "0.7.2"
   json_annotation:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: json_annotation
       sha256: "1ce844379ca14835a50d2f019a3099f419082cfdd231cd86a142af94dd5c6bb1"
       url: "https://pub.dev"
     source: hosted
     version: "4.9.0"
+  json_serializable:
+    dependency: "direct dev"
+    description:
+      name: json_serializable
+      sha256: c5b2ee75210a0f263c6c7b9eeea80553dbae96ea1bf57f02484e806a3ffdffa3
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.11.2"
   just_audio:
     dependency: "direct main"
     description:
@@ -792,13 +808,21 @@ packages:
     source: hosted
     version: "2.6.2"
   logging:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: logging
       sha256: c8245ada5f1717ed44271ed1c26b8ce85ca3228fd2ffdb75468ab01979309d61
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  mailer:
+    dependency: "direct main"
+    description:
+      name: mailer
+      sha256: c3b934c0e800ddc946167c0123a900eba5acd009abb73648d0191a742542f2b4
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.6.0"
   matcher:
     dependency: transitive
     description:
@@ -1196,6 +1220,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.0"
+  source_helper:
+    dependency: transitive
+    description:
+      name: source_helper
+      sha256: "6a3c6cc82073a8797f8c4dc4572146114a39652851c157db37e964d9c7038723"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.8"
   source_map_stack_trace:
     dependency: transitive
     description:

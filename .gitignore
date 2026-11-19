@@ -57,6 +57,24 @@ firebase-debug.*.log
 service-account*.json
 **/service-account*.json
 
+# API key files in assets — NEVER commit real keys.
+# Only *.example.json placeholders are allowed in source control.
+assets/config/secure/*.json
+!assets/config/secure/*.example.json
+assets/config/secure/api-keys-development.json
+assets/config/secure/api-keys-staging.json
+assets/config/secure/api-keys-production.json
+
+# GCP Service Account Keys and Configuration - CRITICAL SECURITY
+assets/config/gcp/service-account-*.json
+**/gcp/service-account-*.json
+gcp-service-account*.json
+**/gcp-service-account*.json
+.gcp/
+**/.gcp/
+gcp-credentials*.json
+**/gcp-credentials*.json
+
 # iOS specific secrets
 ios/Runner/GoogleService-Info.plist
 ios/Firebase/*/GoogleService-Info.plist

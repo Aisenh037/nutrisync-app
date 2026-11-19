@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
     // END: FlutterFire Configuration
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -61,14 +62,24 @@ android {
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
-            isMinifyEnabled = false
-            isShrinkResources = false
-            // proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Enable shrinking + R8 code minification for release APK/AAB.
+            // Reduces APK size ~30% and makes reverse-engineering harder.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            // Crashlytics needs native symbols for de-obfuscated crash reports.
+            // flutter build apk --obfuscate --split-debug-info=build/debug-info/
+            // uploads symbols automatically via the Crashlytics Gradle plugin.
         }
         debug {
             signingConfig = signingConfigs.getByName("debug")
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 

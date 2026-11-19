@@ -13,11 +13,13 @@ dependencies:
   go_router: ^14.1.0
   firebase_core: ^3.1.0
   firebase_auth: ^5.1.0
+  firebase_crashlytics: ^3.4.8
   cloud_firestore: ^5.0.1
   google_sign_in: ^6.2.1
   google_sign_in_web: ^0.12.0+2
   cupertino_icons: ^1.0.2
   http: ^0.13.6
+  logging: ^1.2.0
   permission_handler: ^11.3.1
   speech_to_text: ^7.0.0
   just_audio: ^0.9.39
@@ -33,6 +35,12 @@ dependencies:
   device_calendar: ^4.3.2
   # Email service
   mailer: ^6.1.2
+  # JSON serialization
+  json_annotation: ^4.8.1
+  # Cryptography
+  crypto: ^3.0.3
+  # Secure on-device storage (uses Keychain/EncryptedSharedPreferences)
+  flutter_secure_storage: ^9.2.2
 
 dependency_overrides:
   # Fix record_linux compatibility issue for Android builds
@@ -47,6 +55,8 @@ dev_dependencies:
   # Testing dependencies
   mockito: ^5.4.4
   build_runner: ^2.4.9
+  # JSON serialization
+  json_serializable: ^6.7.1
   integration_test:
     sdk: flutter
   test: ^1.24.9
@@ -65,6 +75,10 @@ flutter:
     - assets/images/google_logo.png
     - assets/images/apple_logo.png
     - assets/config/environments/
+    # NOTE: assets/config/secure/ is intentionally NOT bundled.
+    # API keys must be injected via --dart-define at build time or
+    # fetched at runtime from Firebase Remote Config, then stored
+    # in flutter_secure_storage. Never put real keys in assets/.
 
   # --- Custom Fonts ---
   fonts:
