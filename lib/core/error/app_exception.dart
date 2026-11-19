@@ -1,5 +1,6 @@
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 /// Sealed base class for all application exceptions.
 ///
@@ -165,7 +166,6 @@ class ValidationException extends AppException {
 ///     error: (e, _) => AsyncErrorView(error: e),
 ///     ...
 ///   )
-import 'package:flutter/material.dart';
 
 class AsyncErrorView extends StatelessWidget {
   const AsyncErrorView({

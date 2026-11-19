@@ -8,6 +8,8 @@ import '../api/firestore_service.dart' as api;
 import '../models/user_model.dart';
 import '../services/user_profile_service.dart';
 import '../services/subscription_service.dart';
+import '../services/revenuecat_subscription_service.dart';
+import '../core/subscription/subscription_config.dart';
 
 // ── SharedPreferences singleton ──────────────────────────────────────────────
 
@@ -46,7 +48,14 @@ final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
 
 // ── Notifications enabled ─────────────────────────────────────────────────────
 
-final notificationsEnabledProvider = StateProvider<bool>((ref) => true);
+class _NotificationsNotifier extends Notifier<bool> {
+  @override
+  bool build() => true;
+  void set(bool value) => state = value;
+}
+
+final notificationsEnabledProvider =
+    NotifierProvider<_NotificationsNotifier, bool>(_NotificationsNotifier.new);
 
 // ── Connectivity ──────────────────────────────────────────────────────────────
 
@@ -117,9 +126,24 @@ final userProfileServiceProvider = Provider<UserProfileService>((ref) => UserPro
 /// Provides a singleton instance of [SubscriptionService] for subscription management.
 final subscriptionServiceProvider = Provider<SubscriptionService>((ref) => SubscriptionService());
 
+/// Provides the [RevenueCatSubscriptionService] singleton.
+final revenueCatServiceProvider = Provider<RevenueCatSubscriptionService>(
+  (_) => RevenueCatSubscriptionService.instance,
+);
+
 /// Watches the authentication state (signed in/out) as a [StreamProvider].
+/// Also identifies / de-identifies the user with RevenueCat on auth changes.
 final authStateProvider = StreamProvider<User?>((ref) {
-  return ref.watch(authServiceProvider).authStateChanges;
+  final rcService = ref.read(revenueCatServiceProvider);
+  final stream = ref.watch(authServiceProvider).authStateChanges;
+  return stream.asyncMap((user) async {
+    if (user != null) {
+      await rcService.identifyUser(user.uid);
+    } else {
+      await rcService.signOut();
+    }
+    return user;
+  });
 });
 
 /// Provides the current user's profile from Firestore as an AsyncValue<UserModel?>.
@@ -145,7 +169,40 @@ final userProvider = FutureProvider<UserModel?>((ref) async {
   return result.data;
 });
 
-/// Provides the current user's subscription status
+/// Current RevenueCat entitlement status.  Automatically refreshes when
+/// RevenueCat pushes a server-side update (renewal, cancellation, etc.).
+final entitlementStatusProvider = StreamProvider<EntitlementStatus>((ref) {
+  final rcService = ref.watch(revenueCatServiceProvider);
+  // Emit the cached value first, then follow live SDK updates.
+  return () async* {
+    try {
+      yield await rcService.getEntitlementStatus();
+    } catch (_) {
+      yield EntitlementStatus.free;
+    }
+    yield* rcService.entitlementStream;
+  }();
+});
+
+/// `true` while the entitlement status is loading.
+final isPremiumProvider = Provider<bool>((ref) {
+  return ref.watch(entitlementStatusProvider).maybeWhen(
+    data: (s) => s.isPremium,
+    orElse: () => false,
+  );
+});
+
+/// Feature-access map built from the current entitlement.
+/// Keys match [SubscriptionConfig.freeFeatures] ∪ [SubscriptionConfig.premiumFeatures].
+final availableFeaturesProvider = Provider<Map<String, bool>>((ref) {
+  final isPremium = ref.watch(isPremiumProvider);
+  return {
+    for (final f in SubscriptionConfig.freeFeatures) f: true,
+    for (final f in SubscriptionConfig.premiumFeatures) f: isPremium,
+  };
+});
+
+/// Legacy Firestore-based subscription status (used for daily usage counters).
 final subscriptionStatusProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final user = ref.watch(authStateProvider).asData?.value;
   if (user == null) return null;
@@ -154,13 +211,10 @@ final subscriptionStatusProvider = FutureProvider<Map<String, dynamic>?>((ref) a
   return result.data;
 });
 
-/// Provides the current user's available features
-final availableFeaturesProvider = FutureProvider<Map<String, bool>?>((ref) async {
-  final user = ref.watch(authStateProvider).asData?.value;
-  if (user == null) return null;
-  final subscriptionService = ref.watch(subscriptionServiceProvider);
-  final result = await subscriptionService.getAvailableFeatures(user.uid);
-  return result.data;
+/// Available purchase packages from RevenueCat offerings.
+final offeringsProvider = FutureProvider<OfferingsSnapshot>((ref) async {
+  final rcService = ref.watch(revenueCatServiceProvider);
+  return rcService.getOfferings();
 });
 
 /// Provides the current user's profile completion percentage

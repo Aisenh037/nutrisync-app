@@ -7,6 +7,7 @@ import 'firebase_config.dart';
 import 'gcp_config.dart';
 import 'configuration_initializer.dart';
 import '../services/gcp_auth_service.dart';
+import '../services/revenuecat_subscription_service.dart';
 
 /// App initialization manager
 /// Handles loading configurations and initializing services
@@ -47,7 +48,10 @@ class AppInitializer {
       // Step 4: Set up system UI
       await _setupSystemUI();
       
-      // Step 5: Initialize other services
+      // Step 5: Initialize RevenueCat
+      await _initializeRevenueCat();
+
+      // Step 6: Initialize other services
       await _initializeServices();
       
       _isInitialized = true;
@@ -112,6 +116,18 @@ class AppInitializer {
     await FirebaseConfig.instance.initialize();
   }
   
+  /// Initialize RevenueCat
+  Future<void> _initializeRevenueCat() async {
+    if (kDebugMode) print('💳 Initializing RevenueCat...');
+    try {
+      await RevenueCatSubscriptionService.instance.configure();
+      if (kDebugMode) print('✅ RevenueCat initialized');
+    } catch (e) {
+      // Non-fatal — app works in free tier if RevenueCat is unavailable.
+      if (kDebugMode) print('⚠️ RevenueCat init failed (continuing): $e');
+    }
+  }
+
   /// Initialize GCP services
   Future<void> _initializeGCP() async {
     if (kDebugMode) {
