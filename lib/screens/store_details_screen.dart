@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/maps_integration_service.dart';
@@ -121,7 +122,12 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
   }
   
   Widget _buildStoreHeader() {
-    final store = _storeDetails ?? widget.store;
+    // Use detailed info when loaded, fall back to summary from list screen.
+    final String storeName = _storeDetails?.name ?? widget.store.name;
+    final String storeAddress = _storeDetails?.address ?? widget.store.address;
+    final double storeRating = _storeDetails?.rating ?? widget.store.rating;
+    final int storeRatingCount =
+        _storeDetails?.userRatingsTotal ?? widget.store.userRatingsTotal;
     
     return Card(
       child: Padding(
@@ -133,13 +139,13 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    store.name,
+                    storeName,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                if (store.rating > 0) ...[
+                if (storeRating > 0) ...[
                   Icon(
                     Icons.star,
                     color: Colors.amber[600],
@@ -147,15 +153,15 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    store.rating.toStringAsFixed(1),
+                    storeRating.toStringAsFixed(1),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  if (store.userRatingsTotal > 0) ...[
+                  if (storeRatingCount > 0) ...[
                     const SizedBox(width: 4),
                     Text(
-                      '(${store.userRatingsTotal})',
+                      '($storeRatingCount)',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -175,7 +181,7 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    store.address,
+                    storeAddress,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -399,10 +405,13 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        _getPhotoUrl(photo.reference),
+                      child: CachedNetworkImage(
+                        imageUrl: _getPhotoUrl(photo.reference),
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
+                        placeholder: (context, url) => Container(
+                          color: Theme.of(context).colorScheme.surfaceVariant,
+                        ),
+                        errorWidget: (context, url, error) => Container(
                           color: Theme.of(context).colorScheme.surfaceVariant,
                           child: Icon(
                             Icons.image_not_supported,

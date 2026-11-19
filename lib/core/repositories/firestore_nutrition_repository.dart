@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/user_model.dart';
+import '../../services/performance_service.dart';
 import '../error/app_exception.dart';
 import 'nutrition_repository.dart';
 
@@ -17,18 +18,20 @@ class FirestoreNutritionRepository implements NutritionRepository {
 
   @override
   Future<Map<String, List<String>>> getMealPlan(String userId) async {
-    try {
-      final doc = await _userDoc(userId).get();
-      if (!doc.exists || doc.data() == null) return {};
-      final raw = doc.data()!['mealPlan'] as Map<String, dynamic>?;
-      if (raw == null) return {};
-      return raw.map((day, meals) => MapEntry(
-            day,
-            (meals as List).map((m) => m.toString()).toList(),
-          ));
-    } on FirebaseException catch (e) {
-      throw DatabaseException('Failed to fetch meal plan', code: e.code, cause: e);
-    }
+    return PerformanceService.traceAsync(PerformanceService.kMealPlanLoad, () async {
+      try {
+        final doc = await _userDoc(userId).get();
+        if (!doc.exists || doc.data() == null) return {};
+        final raw = doc.data()!['mealPlan'] as Map<String, dynamic>?;
+        if (raw == null) return {};
+        return raw.map((day, meals) => MapEntry(
+              day,
+              (meals as List).map((m) => m.toString()).toList(),
+            ));
+      } on FirebaseException catch (e) {
+        throw DatabaseException('Failed to fetch meal plan', code: e.code, cause: e);
+      }
+    });
   }
 
   @override
@@ -53,14 +56,16 @@ class FirestoreNutritionRepository implements NutritionRepository {
 
   @override
   Future<List<String>> getGroceries(String userId) async {
-    try {
-      final doc = await _userDoc(userId).get();
-      if (!doc.exists || doc.data() == null) return [];
-      final raw = doc.data()!['groceries'] as List?;
-      return raw?.map((e) => e.toString()).toList() ?? [];
-    } on FirebaseException catch (e) {
-      throw DatabaseException('Failed to fetch groceries', code: e.code, cause: e);
-    }
+    return PerformanceService.traceAsync(PerformanceService.kGroceryLoad, () async {
+      try {
+        final doc = await _userDoc(userId).get();
+        if (!doc.exists || doc.data() == null) return [];
+        final raw = doc.data()!['groceries'] as List?;
+        return raw?.map((e) => e.toString()).toList() ?? [];
+      } on FirebaseException catch (e) {
+        throw DatabaseException('Failed to fetch groceries', code: e.code, cause: e);
+      }
+    });
   }
 
   @override

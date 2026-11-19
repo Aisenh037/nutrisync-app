@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import '../config/gcp_config.dart';
 import '../services/gcp_auth_service.dart';
+import '../services/performance_service.dart';
 
 /// Flutter service for food vision AI integration
 class FoodVisionAIService {
@@ -39,11 +40,12 @@ class FoodVisionAIService {
     Map<String, dynamic>? context,
     double? confidenceThreshold,
   }) async {
+    return PerformanceService.traceAsync(PerformanceService.kFoodVisionScan, () async {
     try {
       if (_serviceUrl == null) {
         throw Exception('Service not initialized');
       }
-      
+
       final imageContent = base64Encode(imageData);
       
       final requestBody = {
@@ -73,8 +75,9 @@ class FoodVisionAIService {
         error: 'Food analysis failed: $e',
       );
     }
+    }); // end traceAsync
   }
-  
+
   /// Analyze food image with confirmation flow
   Future<FoodAnalysisWithConfirmationResult> analyzeFoodImageWithConfirmation(
     Uint8List imageData, {
