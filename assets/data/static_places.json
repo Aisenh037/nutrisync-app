@@ -1,0 +1,160 @@
+{
+  "places": [
+    {
+      "id": "static_walmart_supercenter",
+      "name": "Walmart Supercenter",
+      "address": "Common grocery chain location",
+      "location": {
+        "latitude": 37.7749,
+        "longitude": -122.4194
+      },
+      "distance": 1500,
+      "rating": 3.5,
+      "userRatingsTotal": 2500,
+      "priceLevel": 1,
+      "phoneNumber": null,
+      "website": "https://www.walmart.com",
+      "openingHours": {
+        "openNow": true,
+        "weekdayText": [
+          "Monday: 6:00 AM – 11:00 PM",
+          "Tuesday: 6:00 AM – 11:00 PM",
+          "Wednesday: 6:00 AM – 11:00 PM",
+          "Thursday: 6:00 AM – 11:00 PM",
+          "Friday: 6:00 AM – 11:00 PM",
+          "Saturday: 6:00 AM – 11:00 PM",
+          "Sunday: 6:00 AM – 11:00 PM"
+        ]
+      },
+      "storeTypes": ["grocery_or_supermarket", "store"],
+      "photos": [],
+      "reviews": []
+    },
+    {
+      "id": "static_target",
+      "name": "Target",
+      "address": "Common retail chain location",
+      "location": {
+        "latitude": 37.7849,
+        "longitude": -122.4094
+      },
+      "distance": 2000,
+      "rating": 4.0,
+      "userRatingsTotal": 1800,
+      "priceLevel": 2,
+      "phoneNumber": null,
+      "website": "https://www.target.com",
+      "openingHours": {
+        "openNow": true,
+        "weekdayText": [
+          "Monday: 8:00 AM – 10:00 PM",
+          "Tuesday: 8:00 AM – 10:00 PM",
+          "Wednesday: 8:00 AM – 10:00 PM",
+          "Thursday: 8:00 AM – 10:00 PM",
+          "Friday: 8:00 AM – 10:00 PM",
+          "Saturday: 8:00 AM – 10:00 PM",
+          "Sunday: 8:00 AM – 9:00 PM"
+        ]
+      },
+      "storeTypes": ["grocery_or_supermarket", "store"],
+      "photos": [],
+      "reviews": []
+    },
+    {
+      "id": "static_whole_foods",
+      "name": "Whole Foods Market",
+      "address": "Organic grocery chain location",
+      "location": {
+        "latitude": 37.7649,
+        "longitude": -122.4294
+      },
+      "distance": 2500,
+      "rating": 4.3,
+      "userRatingsTotal": 1200,
+      "priceLevel": 3,
+      "phoneNumber": null,
+      "website": "https://www.wholefoodsmarket.com",
+      "openingHours": {
+        "openNow": true,
+        "weekdayText": [
+          "Monday: 7:00 AM – 10:00 PM",
+          "Tuesday: 7:00 AM – 10:00 PM",
+          "Wednesday: 7:00 AM – 10:00 PM",
+          "Thursday: 7:00 AM – 10:00 PM",
+          "Friday: 7:00 AM – 10:00 PM",
+          "Saturday: 7:00 AM – 10:00 PM",
+          "Sunday: 8:00 AM – 9:00 PM"
+        ]
+      },
+      "storeTypes": ["grocery_or_supermarket", "health"],
+      "photos": [],
+      "reviews": []
+    },
+    {
+      "id": "static_kroger",
+      "name": "Kroger",
+      "address": "Regional grocery chain location",
+      "location": {
+        "latitude": 37.7549,
+        "longitude": -122.4394
+      },
+      "distance": 3000,
+      "rating": 4.1,
+      "userRatingsTotal": 950,
+      "priceLevel": 2,
+      "phoneNumber": null,
+      "website": "https://www.kroger.com",
+      "openingHours": {
+        "openNow": true,
+        "weekdayText": [
+          "Monday: 6:00 AM – 12:00 AM",
+          "Tuesday: 6:00 AM – 12:00 AM",
+          "Wednesday: 6:00 AM – 12:00 AM",
+          "Thursday: 6:00 AM – 12:00 AM",
+          "Friday: 6:00 AM – 12:00 AM",
+          "Saturday: 6:00 AM – 12:00 AM",
+          "Sunday: 6:00 AM – 12:00 AM"
+        ]
+      },
+      "storeTypes": ["grocery_or_supermarket"],
+      "photos": [],
+      "reviews": []
+    },
+    {
+      "id": "static_safeway",
+      "name": "Safeway",
+      "address": "Regional grocery chain location",
+      "location": {
+        "latitude": 37.7449,
+        "longitude": -122.4494
+      },
+      "distance": 3500,
+      "rating": 3.8,
+      "userRatingsTotal": 1100,
+      "priceLevel": 2,
+      "phoneNumber": null,
+      "website": "https://www.safeway.com",
+      "openingHours": {
+        "openNow": true,
+        "weekdayText": [
+          "Monday: 5:00 AM – 1:00 AM",
+          "Tuesday: 5:00 AM – 1:00 AM",
+          "Wednesday: 5:00 AM – 1:00 AM",
+          "Thursday: 5:00 AM – 1:00 AM",
+          "Friday: 5:00 AM – 1:00 AM",
+          "Saturday: 5:00 AM – 1:00 AM",
+          "Sunday: 5:00 AM – 1:00 AM"
+        ]
+      },
+      "storeTypes": ["grocery_or_supermarket"],
+      "photos": [],
+      "reviews": []
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2024-01-09",
+    "description": "Static fallback data for common grocery store chains",
+    "note": "This data is used when the primary Google Maps service is unavailable. Locations and details are generic and should be verified before visiting."
+  }
+}

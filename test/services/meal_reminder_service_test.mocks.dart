@@ -4,32 +4,32 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i5;
-import 'dart:typed_data' as _i8;
+import 'dart:typed_data' as _i9;
 
 import 'package:cloud_firestore/cloud_firestore.dart' as _i4;
 import 'package:cloud_firestore_platform_interface/cloud_firestore_platform_interface.dart'
     as _i3;
 import 'package:firebase_core/firebase_core.dart' as _i2;
 import 'package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart'
-    as _i9;
-import 'package:flutter_local_notifications/src/initialization_settings.dart'
     as _i10;
-import 'package:flutter_local_notifications/src/notification_details.dart'
-    as _i12;
-import 'package:flutter_local_notifications/src/platform_specifics/android/schedule_mode.dart'
-    as _i15;
-import 'package:flutter_local_notifications/src/platform_specifics/ios/enums.dart'
-    as _i14;
-import 'package:flutter_local_notifications/src/types.dart' as _i16;
-import 'package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart'
+import 'package:flutter_local_notifications/src/initialization_settings.dart'
     as _i11;
+import 'package:flutter_local_notifications/src/notification_details.dart'
+    as _i13;
+import 'package:flutter_local_notifications/src/platform_specifics/android/schedule_mode.dart'
+    as _i16;
+import 'package:flutter_local_notifications/src/platform_specifics/ios/enums.dart'
+    as _i15;
+import 'package:flutter_local_notifications/src/types.dart' as _i17;
+import 'package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart'
+    as _i12;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i7;
+import 'package:mockito/src/dummies.dart' as _i8;
 import 'package:nutrisync/nutrition/nutrition_intelligence_core.dart' as _i19;
-import 'package:nutrisync/services/calendar_integration_service.dart' as _i6;
+import 'package:nutrisync/services/calendar_integration_service.dart' as _i7;
 import 'package:nutrisync/voice/conversation_context_manager.dart' as _i18;
-import 'package:nutrisync/voice/voice_interface.dart' as _i17;
-import 'package:timezone/timezone.dart' as _i13;
+import 'package:nutrisync/voice/voice_interface.dart' as _i6;
+import 'package:timezone/timezone.dart' as _i14;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -140,9 +140,9 @@ class _FakeFuture_8<T1> extends _i1.SmartFake implements _i5.Future<T1> {
         );
 }
 
-class _FakeMealTimingPattern_9 extends _i1.SmartFake
-    implements _i6.MealTimingPattern {
-  _FakeMealTimingPattern_9(
+class _FakeEnhancedVoiceInteractionResult_9 extends _i1.SmartFake
+    implements _i6.EnhancedVoiceInteractionResult {
+  _FakeEnhancedVoiceInteractionResult_9(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -151,9 +151,20 @@ class _FakeMealTimingPattern_9 extends _i1.SmartFake
         );
 }
 
-class _FakeFirebaseFirestore_10 extends _i1.SmartFake
+class _FakeMealTimingPattern_10 extends _i1.SmartFake
+    implements _i7.MealTimingPattern {
+  _FakeMealTimingPattern_10(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
+class _FakeFirebaseFirestore_11 extends _i1.SmartFake
     implements _i4.FirebaseFirestore {
-  _FakeFirebaseFirestore_10(
+  _FakeFirebaseFirestore_11(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -162,9 +173,9 @@ class _FakeFirebaseFirestore_10 extends _i1.SmartFake
         );
 }
 
-class _FakeAggregateQuery_11 extends _i1.SmartFake
+class _FakeAggregateQuery_12 extends _i1.SmartFake
     implements _i4.AggregateQuery {
-  _FakeAggregateQuery_11(
+  _FakeAggregateQuery_12(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -173,9 +184,9 @@ class _FakeAggregateQuery_11 extends _i1.SmartFake
         );
 }
 
-class _FakeDocumentSnapshot_12<T1 extends Object?> extends _i1.SmartFake
+class _FakeDocumentSnapshot_13<T1 extends Object?> extends _i1.SmartFake
     implements _i4.DocumentSnapshot<T1> {
-  _FakeDocumentSnapshot_12(
+  _FakeDocumentSnapshot_13(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -184,9 +195,9 @@ class _FakeDocumentSnapshot_12<T1 extends Object?> extends _i1.SmartFake
         );
 }
 
-class _FakeSnapshotMetadata_13 extends _i1.SmartFake
+class _FakeSnapshotMetadata_14 extends _i1.SmartFake
     implements _i4.SnapshotMetadata {
-  _FakeSnapshotMetadata_13(
+  _FakeSnapshotMetadata_14(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -215,7 +226,7 @@ class MockFirebaseFirestore extends _i1.Mock implements _i4.FirebaseFirestore {
   @override
   String get databaseURL => (super.noSuchMethod(
         Invocation.getter(#databaseURL),
-        returnValue: _i7.dummyValue<String>(
+        returnValue: _i8.dummyValue<String>(
           this,
           Invocation.getter(#databaseURL),
         ),
@@ -224,7 +235,7 @@ class MockFirebaseFirestore extends _i1.Mock implements _i4.FirebaseFirestore {
   @override
   String get databaseId => (super.noSuchMethod(
         Invocation.getter(#databaseId),
-        returnValue: _i7.dummyValue<String>(
+        returnValue: _i8.dummyValue<String>(
           this,
           Invocation.getter(#databaseId),
         ),
@@ -336,7 +347,7 @@ class MockFirebaseFirestore extends _i1.Mock implements _i4.FirebaseFirestore {
       ) as _i5.Future<void>);
 
   @override
-  _i4.LoadBundleTask loadBundle(_i8.Uint8List? bundle) => (super.noSuchMethod(
+  _i4.LoadBundleTask loadBundle(_i9.Uint8List? bundle) => (super.noSuchMethod(
         Invocation.method(
           #loadBundle,
           [bundle],
@@ -502,8 +513,8 @@ class MockFirebaseFirestore extends _i1.Mock implements _i4.FirebaseFirestore {
             #maxAttempts: maxAttempts,
           },
         ),
-        returnValue: _i7.ifNotNull(
-              _i7.dummyValueOrNull<T>(
+        returnValue: _i8.ifNotNull(
+              _i8.dummyValueOrNull<T>(
                 this,
                 Invocation.method(
                   #runTransaction,
@@ -583,17 +594,17 @@ class MockFirebaseFirestore extends _i1.Mock implements _i4.FirebaseFirestore {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockFlutterLocalNotificationsPlugin extends _i1.Mock
-    implements _i9.FlutterLocalNotificationsPlugin {
+    implements _i10.FlutterLocalNotificationsPlugin {
   MockFlutterLocalNotificationsPlugin() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
   _i5.Future<bool?> initialize(
-    _i10.InitializationSettings? initializationSettings, {
-    _i11.DidReceiveNotificationResponseCallback?
+    _i11.InitializationSettings? initializationSettings, {
+    _i12.DidReceiveNotificationResponseCallback?
         onDidReceiveNotificationResponse,
-    _i11.DidReceiveBackgroundNotificationResponseCallback?
+    _i12.DidReceiveBackgroundNotificationResponseCallback?
         onDidReceiveBackgroundNotificationResponse,
   }) =>
       (super.noSuchMethod(
@@ -610,21 +621,21 @@ class MockFlutterLocalNotificationsPlugin extends _i1.Mock
       ) as _i5.Future<bool?>);
 
   @override
-  _i5.Future<_i11.NotificationAppLaunchDetails?>
+  _i5.Future<_i12.NotificationAppLaunchDetails?>
       getNotificationAppLaunchDetails() => (super.noSuchMethod(
             Invocation.method(
               #getNotificationAppLaunchDetails,
               [],
             ),
-            returnValue: _i5.Future<_i11.NotificationAppLaunchDetails?>.value(),
-          ) as _i5.Future<_i11.NotificationAppLaunchDetails?>);
+            returnValue: _i5.Future<_i12.NotificationAppLaunchDetails?>.value(),
+          ) as _i5.Future<_i12.NotificationAppLaunchDetails?>);
 
   @override
   _i5.Future<void> show(
     int? id,
     String? title,
     String? body,
-    _i12.NotificationDetails? notificationDetails, {
+    _i13.NotificationDetails? notificationDetails, {
     String? payload,
   }) =>
       (super.noSuchMethod(
@@ -672,14 +683,14 @@ class MockFlutterLocalNotificationsPlugin extends _i1.Mock
     int? id,
     String? title,
     String? body,
-    _i13.TZDateTime? scheduledDate,
-    _i12.NotificationDetails? notificationDetails, {
-    required _i14.UILocalNotificationDateInterpretation?
+    _i14.TZDateTime? scheduledDate,
+    _i13.NotificationDetails? notificationDetails, {
+    required _i15.UILocalNotificationDateInterpretation?
         uiLocalNotificationDateInterpretation,
     bool? androidAllowWhileIdle = false,
-    _i15.AndroidScheduleMode? androidScheduleMode,
+    _i16.AndroidScheduleMode? androidScheduleMode,
     String? payload,
-    _i16.DateTimeComponents? matchDateTimeComponents,
+    _i17.DateTimeComponents? matchDateTimeComponents,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -709,11 +720,11 @@ class MockFlutterLocalNotificationsPlugin extends _i1.Mock
     int? id,
     String? title,
     String? body,
-    _i11.RepeatInterval? repeatInterval,
-    _i12.NotificationDetails? notificationDetails, {
+    _i12.RepeatInterval? repeatInterval,
+    _i13.NotificationDetails? notificationDetails, {
     String? payload,
     bool? androidAllowWhileIdle = false,
-    _i15.AndroidScheduleMode? androidScheduleMode,
+    _i16.AndroidScheduleMode? androidScheduleMode,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -741,9 +752,9 @@ class MockFlutterLocalNotificationsPlugin extends _i1.Mock
     String? title,
     String? body,
     Duration? repeatDurationInterval,
-    _i12.NotificationDetails? notificationDetails, {
-    _i15.AndroidScheduleMode? androidScheduleMode =
-        _i15.AndroidScheduleMode.exact,
+    _i13.NotificationDetails? notificationDetails, {
+    _i16.AndroidScheduleMode? androidScheduleMode =
+        _i16.AndroidScheduleMode.exact,
     String? payload,
   }) =>
       (super.noSuchMethod(
@@ -766,40 +777,40 @@ class MockFlutterLocalNotificationsPlugin extends _i1.Mock
       ) as _i5.Future<void>);
 
   @override
-  _i5.Future<List<_i11.PendingNotificationRequest>>
+  _i5.Future<List<_i12.PendingNotificationRequest>>
       pendingNotificationRequests() => (super.noSuchMethod(
             Invocation.method(
               #pendingNotificationRequests,
               [],
             ),
             returnValue:
-                _i5.Future<List<_i11.PendingNotificationRequest>>.value(
-                    <_i11.PendingNotificationRequest>[]),
-          ) as _i5.Future<List<_i11.PendingNotificationRequest>>);
+                _i5.Future<List<_i12.PendingNotificationRequest>>.value(
+                    <_i12.PendingNotificationRequest>[]),
+          ) as _i5.Future<List<_i12.PendingNotificationRequest>>);
 
   @override
-  _i5.Future<List<_i11.ActiveNotification>> getActiveNotifications() =>
+  _i5.Future<List<_i12.ActiveNotification>> getActiveNotifications() =>
       (super.noSuchMethod(
         Invocation.method(
           #getActiveNotifications,
           [],
         ),
-        returnValue: _i5.Future<List<_i11.ActiveNotification>>.value(
-            <_i11.ActiveNotification>[]),
-      ) as _i5.Future<List<_i11.ActiveNotification>>);
+        returnValue: _i5.Future<List<_i12.ActiveNotification>>.value(
+            <_i12.ActiveNotification>[]),
+      ) as _i5.Future<List<_i12.ActiveNotification>>);
 }
 
 /// A class which mocks [VoiceInterface].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockVoiceInterface extends _i1.Mock implements _i17.VoiceInterface {
+class MockVoiceInterface extends _i1.Mock implements _i6.VoiceInterface {
   MockVoiceInterface() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  bool get isListening => (super.noSuchMethod(
-        Invocation.getter(#isListening),
+  bool get isEnhancedVoiceAvailable => (super.noSuchMethod(
+        Invocation.getter(#isEnhancedVoiceAvailable),
         returnValue: false,
       ) as bool);
 
@@ -825,13 +836,13 @@ class MockVoiceInterface extends _i1.Mock implements _i17.VoiceInterface {
       ) as _i5.Future<bool>);
 
   @override
-  _i5.Future<String> processVoiceInput(_i8.Uint8List? audioData) =>
+  _i5.Future<String> processVoiceInput(_i9.Uint8List? audioData) =>
       (super.noSuchMethod(
         Invocation.method(
           #processVoiceInput,
           [audioData],
         ),
-        returnValue: _i5.Future<String>.value(_i7.dummyValue<String>(
+        returnValue: _i5.Future<String>.value(_i8.dummyValue<String>(
           this,
           Invocation.method(
             #processVoiceInput,
@@ -841,15 +852,15 @@ class MockVoiceInterface extends _i1.Mock implements _i17.VoiceInterface {
       ) as _i5.Future<String>);
 
   @override
-  _i5.Future<_i8.Uint8List> recordAudio({int? durationSeconds = 5}) =>
+  _i5.Future<_i9.Uint8List> recordAudio({int? durationSeconds = 5}) =>
       (super.noSuchMethod(
         Invocation.method(
           #recordAudio,
           [],
           {#durationSeconds: durationSeconds},
         ),
-        returnValue: _i5.Future<_i8.Uint8List>.value(_i8.Uint8List(0)),
-      ) as _i5.Future<_i8.Uint8List>);
+        returnValue: _i5.Future<_i9.Uint8List>.value(_i9.Uint8List(0)),
+      ) as _i5.Future<_i9.Uint8List>);
 
   @override
   _i5.Future<String> listenForVoiceInput({int? timeoutSeconds = 10}) =>
@@ -859,7 +870,7 @@ class MockVoiceInterface extends _i1.Mock implements _i17.VoiceInterface {
           [],
           {#timeoutSeconds: timeoutSeconds},
         ),
-        returnValue: _i5.Future<String>.value(_i7.dummyValue<String>(
+        returnValue: _i5.Future<String>.value(_i8.dummyValue<String>(
           this,
           Invocation.method(
             #listenForVoiceInput,
@@ -870,17 +881,17 @@ class MockVoiceInterface extends _i1.Mock implements _i17.VoiceInterface {
       ) as _i5.Future<String>);
 
   @override
-  _i5.Future<_i8.Uint8List> generateVoiceResponse(String? text) =>
+  _i5.Future<_i9.Uint8List> generateVoiceResponse(String? text) =>
       (super.noSuchMethod(
         Invocation.method(
           #generateVoiceResponse,
           [text],
         ),
-        returnValue: _i5.Future<_i8.Uint8List>.value(_i8.Uint8List(0)),
-      ) as _i5.Future<_i8.Uint8List>);
+        returnValue: _i5.Future<_i9.Uint8List>.value(_i9.Uint8List(0)),
+      ) as _i5.Future<_i9.Uint8List>);
 
   @override
-  _i5.Future<void> playAudio(_i8.Uint8List? audioBytes) => (super.noSuchMethod(
+  _i5.Future<void> playAudio(_i9.Uint8List? audioBytes) => (super.noSuchMethod(
         Invocation.method(
           #playAudio,
           [audioBytes],
@@ -900,7 +911,7 @@ class MockVoiceInterface extends _i1.Mock implements _i17.VoiceInterface {
       ) as _i5.Future<void>);
 
   @override
-  _i5.Stream<_i17.VoiceInteraction> startConversation({
+  _i5.Stream<_i6.VoiceInteraction> startConversation({
     String? userId,
     Map<String, dynamic>? initialContext,
   }) =>
@@ -913,8 +924,8 @@ class MockVoiceInterface extends _i1.Mock implements _i17.VoiceInterface {
             #initialContext: initialContext,
           },
         ),
-        returnValue: _i5.Stream<_i17.VoiceInteraction>.empty(),
-      ) as _i5.Stream<_i17.VoiceInteraction>);
+        returnValue: _i5.Stream<_i6.VoiceInteraction>.empty(),
+      ) as _i5.Stream<_i6.VoiceInteraction>);
 
   @override
   void handleInterruption({String? reason}) => super.noSuchMethod(
@@ -932,7 +943,7 @@ class MockVoiceInterface extends _i1.Mock implements _i17.VoiceInterface {
           #resumeConversation,
           [],
         ),
-        returnValue: _i5.Future<String>.value(_i7.dummyValue<String>(
+        returnValue: _i5.Future<String>.value(_i8.dummyValue<String>(
           this,
           Invocation.method(
             #resumeConversation,
@@ -954,7 +965,7 @@ class MockVoiceInterface extends _i1.Mock implements _i17.VoiceInterface {
             baseResponse,
           ],
         ),
-        returnValue: _i5.Future<String>.value(_i7.dummyValue<String>(
+        returnValue: _i5.Future<String>.value(_i8.dummyValue<String>(
           this,
           Invocation.method(
             #generateContextualResponse,
@@ -1002,6 +1013,48 @@ class MockVoiceInterface extends _i1.Mock implements _i17.VoiceInterface {
         ),
         returnValueForMissingStub: null,
       );
+
+  @override
+  _i5.Future<_i6.EnhancedVoiceInteractionResult>
+      processEnhancedVoiceInteraction(
+    _i9.Uint8List? audioData, {
+    String? userId,
+    String? sessionId,
+    Map<String, dynamic>? context,
+  }) =>
+          (super.noSuchMethod(
+            Invocation.method(
+              #processEnhancedVoiceInteraction,
+              [audioData],
+              {
+                #userId: userId,
+                #sessionId: sessionId,
+                #context: context,
+              },
+            ),
+            returnValue: _i5.Future<_i6.EnhancedVoiceInteractionResult>.value(
+                _FakeEnhancedVoiceInteractionResult_9(
+              this,
+              Invocation.method(
+                #processEnhancedVoiceInteraction,
+                [audioData],
+                {
+                  #userId: userId,
+                  #sessionId: sessionId,
+                  #context: context,
+                },
+              ),
+            )),
+          ) as _i5.Future<_i6.EnhancedVoiceInteractionResult>);
+
+  @override
+  _i5.Future<bool> testEnhancedVoiceConnection() => (super.noSuchMethod(
+        Invocation.method(
+          #testEnhancedVoiceConnection,
+          [],
+        ),
+        returnValue: _i5.Future<bool>.value(false),
+      ) as _i5.Future<bool>);
 
   @override
   _i5.Future<bool> testElevenLabsConnection() => (super.noSuchMethod(
@@ -1068,7 +1121,7 @@ class MockConversationContextManager extends _i1.Mock
             #initialContext: initialContext,
           },
         ),
-        returnValue: _i7.dummyValue<String>(
+        returnValue: _i8.dummyValue<String>(
           this,
           Invocation.method(
             #startSession,
@@ -1117,7 +1170,7 @@ class MockConversationContextManager extends _i1.Mock
           #resumeConversation,
           [sessionId],
         ),
-        returnValue: _i7.dummyValue<String>(
+        returnValue: _i8.dummyValue<String>(
           this,
           Invocation.method(
             #resumeConversation,
@@ -1204,7 +1257,7 @@ class MockConversationContextManager extends _i1.Mock
             baseResponse,
           ],
         ),
-        returnValue: _i7.dummyValue<String>(
+        returnValue: _i8.dummyValue<String>(
           this,
           Invocation.method(
             #generateContextualResponse,
@@ -1256,7 +1309,7 @@ class MockConversationContextManager extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockCalendarIntegrationService extends _i1.Mock
-    implements _i6.CalendarIntegrationService {
+    implements _i7.CalendarIntegrationService {
   MockCalendarIntegrationService() {
     _i1.throwOnMissingStub(this);
   }
@@ -1271,19 +1324,19 @@ class MockCalendarIntegrationService extends _i1.Mock
       ) as _i5.Future<bool>);
 
   @override
-  _i5.Future<List<_i6.CalendarEvent>> syncCalendar(String? userId) =>
+  _i5.Future<List<_i7.CalendarEvent>> syncCalendar(String? userId) =>
       (super.noSuchMethod(
         Invocation.method(
           #syncCalendar,
           [userId],
         ),
         returnValue:
-            _i5.Future<List<_i6.CalendarEvent>>.value(<_i6.CalendarEvent>[]),
-      ) as _i5.Future<List<_i6.CalendarEvent>>);
+            _i5.Future<List<_i7.CalendarEvent>>.value(<_i7.CalendarEvent>[]),
+      ) as _i5.Future<List<_i7.CalendarEvent>>);
 
   @override
-  List<_i6.MealTimingSuggestion> suggestMealTiming(
-    List<_i6.CalendarEvent>? events,
+  List<_i7.MealTimingSuggestion> suggestMealTiming(
+    List<_i7.CalendarEvent>? events,
     _i19.UserProfile? profile,
   ) =>
       (super.noSuchMethod(
@@ -1294,12 +1347,12 @@ class MockCalendarIntegrationService extends _i1.Mock
             profile,
           ],
         ),
-        returnValue: <_i6.MealTimingSuggestion>[],
-      ) as List<_i6.MealTimingSuggestion>);
+        returnValue: <_i7.MealTimingSuggestion>[],
+      ) as List<_i7.MealTimingSuggestion>);
 
   @override
-  List<_i6.QuickMealSuggestion> suggestQuickMeals(
-    List<_i6.CalendarEvent>? busyPeriods,
+  List<_i7.QuickMealSuggestion> suggestQuickMeals(
+    List<_i7.CalendarEvent>? busyPeriods,
     _i19.UserProfile? profile,
   ) =>
       (super.noSuchMethod(
@@ -1310,11 +1363,11 @@ class MockCalendarIntegrationService extends _i1.Mock
             profile,
           ],
         ),
-        returnValue: <_i6.QuickMealSuggestion>[],
-      ) as List<_i6.QuickMealSuggestion>);
+        returnValue: <_i7.QuickMealSuggestion>[],
+      ) as List<_i7.QuickMealSuggestion>);
 
   @override
-  _i5.Future<void> scheduleMealReminders(List<_i6.MealReminder>? reminders) =>
+  _i5.Future<void> scheduleMealReminders(List<_i7.MealReminder>? reminders) =>
       (super.noSuchMethod(
         Invocation.method(
           #scheduleMealReminders,
@@ -1325,21 +1378,21 @@ class MockCalendarIntegrationService extends _i1.Mock
       ) as _i5.Future<void>);
 
   @override
-  _i5.Future<_i6.MealTimingPattern> analyzeMealTimingPatterns(String? userId) =>
+  _i5.Future<_i7.MealTimingPattern> analyzeMealTimingPatterns(String? userId) =>
       (super.noSuchMethod(
         Invocation.method(
           #analyzeMealTimingPatterns,
           [userId],
         ),
         returnValue:
-            _i5.Future<_i6.MealTimingPattern>.value(_FakeMealTimingPattern_9(
+            _i5.Future<_i7.MealTimingPattern>.value(_FakeMealTimingPattern_10(
           this,
           Invocation.method(
             #analyzeMealTimingPatterns,
             [userId],
           ),
         )),
-      ) as _i5.Future<_i6.MealTimingPattern>);
+      ) as _i5.Future<_i7.MealTimingPattern>);
 }
 
 /// A class which mocks [CollectionReference].
@@ -1355,7 +1408,7 @@ class MockCollectionReference<T extends Object?> extends _i1.Mock
   @override
   String get id => (super.noSuchMethod(
         Invocation.getter(#id),
-        returnValue: _i7.dummyValue<String>(
+        returnValue: _i8.dummyValue<String>(
           this,
           Invocation.getter(#id),
         ),
@@ -1364,7 +1417,7 @@ class MockCollectionReference<T extends Object?> extends _i1.Mock
   @override
   String get path => (super.noSuchMethod(
         Invocation.getter(#path),
-        returnValue: _i7.dummyValue<String>(
+        returnValue: _i8.dummyValue<String>(
           this,
           Invocation.getter(#path),
         ),
@@ -1373,7 +1426,7 @@ class MockCollectionReference<T extends Object?> extends _i1.Mock
   @override
   _i4.FirebaseFirestore get firestore => (super.noSuchMethod(
         Invocation.getter(#firestore),
-        returnValue: _FakeFirebaseFirestore_10(
+        returnValue: _FakeFirebaseFirestore_11(
           this,
           Invocation.getter(#firestore),
         ),
@@ -1716,7 +1769,7 @@ class MockCollectionReference<T extends Object?> extends _i1.Mock
           #count,
           [],
         ),
-        returnValue: _FakeAggregateQuery_11(
+        returnValue: _FakeAggregateQuery_12(
           this,
           Invocation.method(
             #count,
@@ -1794,7 +1847,7 @@ class MockCollectionReference<T extends Object?> extends _i1.Mock
             aggregateField30,
           ],
         ),
-        returnValue: _FakeAggregateQuery_11(
+        returnValue: _FakeAggregateQuery_12(
           this,
           Invocation.method(
             #aggregate,
@@ -1848,7 +1901,7 @@ class MockDocumentReference<T extends Object?> extends _i1.Mock
   @override
   _i4.FirebaseFirestore get firestore => (super.noSuchMethod(
         Invocation.getter(#firestore),
-        returnValue: _FakeFirebaseFirestore_10(
+        returnValue: _FakeFirebaseFirestore_11(
           this,
           Invocation.getter(#firestore),
         ),
@@ -1857,7 +1910,7 @@ class MockDocumentReference<T extends Object?> extends _i1.Mock
   @override
   String get id => (super.noSuchMethod(
         Invocation.getter(#id),
-        returnValue: _i7.dummyValue<String>(
+        returnValue: _i8.dummyValue<String>(
           this,
           Invocation.getter(#id),
         ),
@@ -1875,7 +1928,7 @@ class MockDocumentReference<T extends Object?> extends _i1.Mock
   @override
   String get path => (super.noSuchMethod(
         Invocation.getter(#path),
-        returnValue: _i7.dummyValue<String>(
+        returnValue: _i8.dummyValue<String>(
           this,
           Invocation.getter(#path),
         ),
@@ -1926,7 +1979,7 @@ class MockDocumentReference<T extends Object?> extends _i1.Mock
           [options],
         ),
         returnValue: _i5.Future<_i4.DocumentSnapshot<T>>.value(
-            _FakeDocumentSnapshot_12<T>(
+            _FakeDocumentSnapshot_13<T>(
           this,
           Invocation.method(
             #get,
@@ -2009,7 +2062,7 @@ class MockDocumentSnapshot<T extends Object?> extends _i1.Mock
   @override
   String get id => (super.noSuchMethod(
         Invocation.getter(#id),
-        returnValue: _i7.dummyValue<String>(
+        returnValue: _i8.dummyValue<String>(
           this,
           Invocation.getter(#id),
         ),
@@ -2027,7 +2080,7 @@ class MockDocumentSnapshot<T extends Object?> extends _i1.Mock
   @override
   _i4.SnapshotMetadata get metadata => (super.noSuchMethod(
         Invocation.getter(#metadata),
-        returnValue: _FakeSnapshotMetadata_13(
+        returnValue: _FakeSnapshotMetadata_14(
           this,
           Invocation.getter(#metadata),
         ),
@@ -2076,7 +2129,7 @@ class MockQuerySnapshot<T extends Object?> extends _i1.Mock
   @override
   _i4.SnapshotMetadata get metadata => (super.noSuchMethod(
         Invocation.getter(#metadata),
-        returnValue: _FakeSnapshotMetadata_13(
+        returnValue: _FakeSnapshotMetadata_14(
           this,
           Invocation.getter(#metadata),
         ),
@@ -2101,7 +2154,7 @@ class MockQuery<T extends Object?> extends _i1.Mock implements _i4.Query<T> {
   @override
   _i4.FirebaseFirestore get firestore => (super.noSuchMethod(
         Invocation.getter(#firestore),
-        returnValue: _FakeFirebaseFirestore_10(
+        returnValue: _FakeFirebaseFirestore_11(
           this,
           Invocation.getter(#firestore),
         ),
@@ -2413,7 +2466,7 @@ class MockQuery<T extends Object?> extends _i1.Mock implements _i4.Query<T> {
           #count,
           [],
         ),
-        returnValue: _FakeAggregateQuery_11(
+        returnValue: _FakeAggregateQuery_12(
           this,
           Invocation.method(
             #count,
@@ -2491,7 +2544,7 @@ class MockQuery<T extends Object?> extends _i1.Mock implements _i4.Query<T> {
             aggregateField30,
           ],
         ),
-        returnValue: _FakeAggregateQuery_11(
+        returnValue: _FakeAggregateQuery_12(
           this,
           Invocation.method(
             #aggregate,

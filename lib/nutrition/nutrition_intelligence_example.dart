@@ -355,7 +355,6 @@ class MockFoodDatabase {
     return [];
   }
 }
-}
 
 /// Run all examples
 Future<void> runNutritionIntelligenceExamples() async {

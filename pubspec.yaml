@@ -41,6 +41,10 @@ dependencies:
   crypto: ^3.0.3
   # Secure on-device storage (uses Keychain/EncryptedSharedPreferences)
   flutter_secure_storage: ^9.2.2
+  # P2 — UX
+  shimmer: ^3.0.0
+  shared_preferences: ^2.3.2
+  connectivity_plus: ^6.0.3
 
 dependency_overrides:
   # Fix record_linux compatibility issue for Android builds

@@ -8,10 +8,12 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../voice_first_ai/config.dart';
+import '../services/enhanced_voice_ai_service.dart';
 import 'conversation_context_manager.dart';
 
 /// Voice Interface Layer for handling speech-to-text and text-to-speech
 /// Provides seamless voice interaction with sub-3-second response times
+/// Enhanced with GCP Speech-to-Text and Text-to-Speech APIs
 class VoiceInterface {
   final String _elevenLabsApiKey;
   final String _voiceId;
@@ -20,16 +22,22 @@ class VoiceInterface {
   final AudioRecorder _audioRecorder = AudioRecorder();
   final ConversationContextManager _contextManager = ConversationContextManager();
   
+  // Enhanced voice AI service
+  final EnhancedVoiceAIService _enhancedVoiceService = EnhancedVoiceAIService.instance;
+  
   bool _isInitialized = false;
   bool _isListening = false;
   bool _isPlaying = false;
   String? _currentSessionId;
+  bool _useEnhancedVoice = true; // Flag to use GCP services
 
   VoiceInterface({
     required String elevenLabsApiKey,
     String? voiceId,
+    bool useEnhancedVoice = true,
   }) : _elevenLabsApiKey = elevenLabsApiKey,
-       _voiceId = voiceId ?? VoiceFirstAIConfig.defaultVoiceId;
+       _voiceId = voiceId ?? VoiceFirstAIConfig.defaultVoiceId,
+       _useEnhancedVoice = useEnhancedVoice;
 
   /// Initialize the voice interface
   Future<bool> initialize() async {
@@ -50,6 +58,17 @@ class VoiceInterface {
         throw Exception('Speech-to-text not available');
       }
 
+      // Initialize enhanced voice AI service if enabled
+      if (_useEnhancedVoice) {
+        try {
+          await _enhancedVoiceService.initialize();
+          print('Enhanced Voice AI service initialized');
+        } catch (e) {
+          print('Enhanced Voice AI service initialization failed, falling back to basic: $e');
+          _useEnhancedVoice = false;
+        }
+      }
+
       _isInitialized = true;
       print('Voice interface initialized successfully');
       return true;
@@ -66,6 +85,22 @@ class VoiceInterface {
     }
 
     try {
+      // Use enhanced voice service if available
+      if (_useEnhancedVoice) {
+        final result = await _enhancedVoiceService.processVoiceInput(
+          audioData,
+          languageCode: 'en-IN', // Indian English for better Hinglish support
+        );
+        
+        if (result.error == null && result.transcription.isNotEmpty) {
+          return result.transcription;
+        } else {
+          print('Enhanced voice service failed, falling back to basic: ${result.error}');
+          // Fall back to basic speech-to-text
+        }
+      }
+
+      // Fallback to basic speech-to-text processing
       // Save audio data to temporary file
       final tempDir = await getTemporaryDirectory();
       final audioFile = File('${tempDir.path}/temp_audio.wav');
@@ -208,13 +243,29 @@ class VoiceInterface {
     }
   }
 
-  /// Generate voice response from text using ElevenLabs
+  /// Generate voice response from text using enhanced TTS or ElevenLabs
   Future<Uint8List> generateVoiceResponse(String text) async {
     if (text.isEmpty) {
       throw Exception('Text cannot be empty');
     }
 
     try {
+      // Use enhanced voice service if available
+      if (_useEnhancedVoice) {
+        final result = await _enhancedVoiceService.generateVoiceResponse(
+          text,
+          languageCode: 'en-IN', // Indian English
+        );
+        
+        if (result.error == null && result.audioContent != null) {
+          return base64Decode(result.audioContent!);
+        } else {
+          print('Enhanced TTS failed, falling back to ElevenLabs: ${result.error}');
+          // Fall back to ElevenLabs
+        }
+      }
+
+      // Fallback to ElevenLabs TTS
       final url = Uri.parse('${VoiceFirstAIConfig.elevenLabsApiUrl}/text-to-speech/$_voiceId');
       
       final requestBody = {
@@ -418,8 +469,70 @@ class VoiceInterface {
     }
   }
 
-  /// Check if currently listening
-  bool get isListening => _isListening;
+  /// Process complete voice interaction (STT + processing + TTS) using enhanced service
+  Future<EnhancedVoiceInteractionResult> processEnhancedVoiceInteraction(
+    Uint8List audioData, {
+    String? userId,
+    String? sessionId,
+    Map<String, dynamic>? context,
+  }) async {
+    if (!_isInitialized) {
+      throw Exception('Voice interface not initialized');
+    }
+
+    try {
+      if (_useEnhancedVoice) {
+        final result = await _enhancedVoiceService.processVoiceInteraction(
+          audioData,
+          userId: userId,
+          sessionId: sessionId ?? _currentSessionId,
+          languageCode: 'en-IN',
+          context: context,
+        );
+        
+        return EnhancedVoiceInteractionResult(
+          transcription: result.transcription,
+          response: result.response,
+          audioResponse: result.audioResponse != null ? base64Decode(result.audioResponse!) : null,
+          detectedLanguage: result.detectedLanguage,
+          confidence: result.confidence,
+          error: result.error,
+          metadata: result.metadata,
+        );
+      } else {
+        // Fallback to basic processing
+        final transcription = await processVoiceInput(audioData);
+        final response = 'Aapne kaha: "$transcription". Main samajh gaya hun.';
+        final audioResponse = await generateVoiceResponse(response);
+        
+        return EnhancedVoiceInteractionResult(
+          transcription: transcription,
+          response: response,
+          audioResponse: audioResponse,
+          detectedLanguage: 'en-IN',
+          confidence: 0.8,
+        );
+      }
+    } catch (e) {
+      return EnhancedVoiceInteractionResult(
+        transcription: '',
+        response: 'Maaf kijiye, kuch technical problem hui hai. Kripaya phir se try kariye.',
+        audioResponse: null,
+        detectedLanguage: 'en-IN',
+        confidence: 0.0,
+        error: 'Enhanced voice interaction failed: $e',
+      );
+    }
+  }
+
+  /// Check if enhanced voice service is available
+  bool get isEnhancedVoiceAvailable => _useEnhancedVoice;
+
+  /// Test enhanced voice service connection
+  Future<bool> testEnhancedVoiceConnection() async {
+    if (!_useEnhancedVoice) return false;
+    return await _enhancedVoiceService.testConnection();
+  }
 
   /// Check if currently playing audio
   bool get isPlaying => _isPlaying;
@@ -551,4 +664,25 @@ enum InteractionType {
   nutritionQuery,
   recommendation,
   clarification,
+}
+
+/// Enhanced voice interaction result
+class EnhancedVoiceInteractionResult {
+  final String transcription;
+  final String response;
+  final Uint8List? audioResponse;
+  final String? detectedLanguage;
+  final double confidence;
+  final String? error;
+  final Map<String, dynamic>? metadata;
+
+  EnhancedVoiceInteractionResult({
+    required this.transcription,
+    required this.response,
+    this.audioResponse,
+    this.detectedLanguage,
+    required this.confidence,
+    this.error,
+    this.metadata,
+  });
 }

@@ -1,0 +1,263 @@
+{
+  "intents": [
+    {
+      "displayName": "meal.logging",
+      "trainingPhrases": [
+        "I had dal chawal for lunch",
+        "I ate roti with sabzi",
+        "Maine khana khaya",
+        "I had breakfast",
+        "I ate dinner",
+        "Maine dal chawal khaya",
+        "I had paneer curry",
+        "I ate biryani",
+        "Maine dosa khaya",
+        "I had upma for breakfast"
+      ],
+      "parameters": [
+        {
+          "displayName": "food-item",
+          "entityType": "@sys.any",
+          "isList": true
+        },
+        {
+          "displayName": "meal-type",
+          "entityType": "@meal-type",
+          "isList": false
+        },
+        {
+          "displayName": "quantity",
+          "entityType": "@sys.number",
+          "isList": false
+        }
+      ],
+      "responses": [
+        "Accha! Aapne {food-item} khaya hai. Main iska nutrition calculate kar raha hun.",
+        "Great! I've logged your {meal-type}. Let me calculate the nutrition for {food-item}.",
+        "Perfect! {food-item} logged successfully. Would you like to see the nutrition breakdown?"
+      ]
+    },
+    {
+      "displayName": "nutrition.inquiry",
+      "trainingPhrases": [
+        "How many calories in dal chawal",
+        "What is the nutrition of roti",
+        "Calories kitne hain",
+        "Nutrition batao",
+        "Is this healthy",
+        "Protein kitna hai",
+        "Carbs kitne hain",
+        "Fat content kya hai",
+        "Vitamins kya hain",
+        "Minerals batao"
+      ],
+      "parameters": [
+        {
+          "displayName": "food-item",
+          "entityType": "@sys.any",
+          "isList": false
+        },
+        {
+          "displayName": "nutrient-type",
+          "entityType": "@nutrient-type",
+          "isList": false
+        }
+      ],
+      "responses": [
+        "Let me check the nutrition information for {food-item}.",
+        "{food-item} mein {nutrient-type} ki details main bata sakta hun.",
+        "Here's the nutritional breakdown for {food-item}."
+      ]
+    },
+    {
+      "displayName": "recommendation.request",
+      "trainingPhrases": [
+        "What should I eat for breakfast",
+        "Suggest healthy lunch",
+        "Kya khana chahiye",
+        "Healthy food batao",
+        "Weight loss ke liye kya khau",
+        "Protein rich food suggest karo",
+        "Vegetarian options batao",
+        "Quick breakfast ideas",
+        "Dinner mein kya banau",
+        "Snack suggestions do"
+      ],
+      "parameters": [
+        {
+          "displayName": "meal-type",
+          "entityType": "@meal-type",
+          "isList": false
+        },
+        {
+          "displayName": "dietary-preference",
+          "entityType": "@dietary-preference",
+          "isList": true
+        },
+        {
+          "displayName": "health-goal",
+          "entityType": "@health-goal",
+          "isList": false
+        }
+      ],
+      "responses": [
+        "For {meal-type}, I recommend these healthy options based on your preferences.",
+        "{meal-type} ke liye main yeh suggest karta hun jo aapke {health-goal} ke liye perfect hai.",
+        "Here are some {dietary-preference} friendly options for {meal-type}."
+      ]
+    },
+    {
+      "displayName": "greeting",
+      "trainingPhrases": [
+        "Hello",
+        "Hi",
+        "Namaste",
+        "Good morning",
+        "Good evening",
+        "Hey there",
+        "Kaise hain",
+        "How are you",
+        "Start conversation",
+        "Help me"
+      ],
+      "parameters": [],
+      "responses": [
+        "Namaste! Main aapka nutrition assistant hun. Aaj kya khaya aapne?",
+        "Hello! I'm your nutrition assistant. How can I help you today?",
+        "Hi there! Ready to track your nutrition and get healthy recommendations?"
+      ]
+    },
+    {
+      "displayName": "calorie.check",
+      "trainingPhrases": [
+        "How many calories did I consume today",
+        "Total calories batao",
+        "Daily calorie intake kya hai",
+        "Calories count karo",
+        "Today's nutrition summary",
+        "Aaj kitne calories khaye",
+        "Daily intake check karo",
+        "Nutrition report do",
+        "Calorie breakdown batao",
+        "Food summary chahiye"
+      ],
+      "parameters": [
+        {
+          "displayName": "time-period",
+          "entityType": "@sys.date-time",
+          "isList": false
+        }
+      ],
+      "responses": [
+        "Let me calculate your total calorie intake for {time-period}.",
+        "Aaj tak aapne total {calories} calories consume kiye hain.",
+        "Here's your nutrition summary for {time-period}."
+      ]
+    },
+    {
+      "displayName": "portion.size",
+      "trainingPhrases": [
+        "How much should I eat",
+        "Portion size kya hona chahiye",
+        "Kitna khana chahiye",
+        "Serving size batao",
+        "Right amount kya hai",
+        "Quantity suggest karo",
+        "How many rotis should I eat",
+        "Dal kitna khau",
+        "Rice portion size",
+        "Sabzi kitni leni chahiye"
+      ],
+      "parameters": [
+        {
+          "displayName": "food-item",
+          "entityType": "@sys.any",
+          "isList": false
+        },
+        {
+          "displayName": "body-weight",
+          "entityType": "@sys.number",
+          "isList": false
+        }
+      ],
+      "responses": [
+        "For {food-item}, the recommended portion size is based on your body weight and activity level.",
+        "{food-item} ka ideal portion size aapke weight aur goals ke according yeh hai.",
+        "Here's the right serving size for {food-item} for optimal nutrition."
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "displayName": "meal-type",
+      "entries": [
+        {"value": "breakfast", "synonyms": ["breakfast", "morning meal", "nashta", "subah ka khana"]},
+        {"value": "lunch", "synonyms": ["lunch", "afternoon meal", "dopahar ka khana", "lunch time"]},
+        {"value": "dinner", "synonyms": ["dinner", "evening meal", "raat ka khana", "supper"]},
+        {"value": "snack", "synonyms": ["snack", "light meal", "nashta", "evening snack"]}
+      ]
+    },
+    {
+      "displayName": "nutrient-type",
+      "entries": [
+        {"value": "calories", "synonyms": ["calories", "energy", "cal", "kcal"]},
+        {"value": "protein", "synonyms": ["protein", "proteins", "amino acids"]},
+        {"value": "carbohydrates", "synonyms": ["carbs", "carbohydrates", "starch", "sugar"]},
+        {"value": "fat", "synonyms": ["fat", "fats", "lipids", "oil"]},
+        {"value": "fiber", "synonyms": ["fiber", "fibre", "roughage"]},
+        {"value": "vitamins", "synonyms": ["vitamins", "vitamin", "micronutrients"]},
+        {"value": "minerals", "synonyms": ["minerals", "mineral", "iron", "calcium"]}
+      ]
+    },
+    {
+      "displayName": "dietary-preference",
+      "entries": [
+        {"value": "vegetarian", "synonyms": ["vegetarian", "veg", "shakahari", "no meat"]},
+        {"value": "vegan", "synonyms": ["vegan", "plant-based", "no dairy", "no animal products"]},
+        {"value": "gluten-free", "synonyms": ["gluten-free", "no gluten", "celiac friendly"]},
+        {"value": "low-carb", "synonyms": ["low-carb", "keto", "ketogenic", "no carbs"]},
+        {"value": "high-protein", "synonyms": ["high-protein", "protein-rich", "muscle building"]}
+      ]
+    },
+    {
+      "displayName": "health-goal",
+      "entries": [
+        {"value": "weight-loss", "synonyms": ["weight loss", "lose weight", "fat loss", "slim down"]},
+        {"value": "weight-gain", "synonyms": ["weight gain", "gain weight", "bulk up", "muscle gain"]},
+        {"value": "maintenance", "synonyms": ["maintain weight", "stay healthy", "balanced diet"]},
+        {"value": "muscle-building", "synonyms": ["muscle building", "bodybuilding", "strength training"]},
+        {"value": "general-health", "synonyms": ["general health", "stay fit", "healthy living"]}
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "name": "nutrition-context",
+      "lifespanCount": 5,
+      "parameters": {
+        "user_preferences": {},
+        "current_meal": {},
+        "daily_intake": {},
+        "health_goals": []
+      }
+    },
+    {
+      "name": "meal-logging-context",
+      "lifespanCount": 3,
+      "parameters": {
+        "logged_foods": [],
+        "meal_type": "",
+        "timestamp": ""
+      }
+    },
+    {
+      "name": "recommendation-context",
+      "lifespanCount": 3,
+      "parameters": {
+        "dietary_preferences": [],
+        "health_goals": [],
+        "meal_type": ""
+      }
+    }
+  ]
+}

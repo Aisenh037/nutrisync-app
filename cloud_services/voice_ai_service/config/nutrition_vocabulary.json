@@ -1,0 +1,77 @@
+{
+  "foods": {
+    "indian": [
+      "dal", "chawal", "roti", "chapati", "sabzi", "paneer", "dahi", "lassi",
+      "biryani", "pulao", "samosa", "dosa", "idli", "vada", "uttapam",
+      "rajma", "chole", "palak", "aloo", "gobi", "bhindi", "karela",
+      "paratha", "naan", "kulcha", "poori", "bhatura",
+      "raita", "pickle", "papad", "chutney", "curry",
+      "kheer", "halwa", "laddu", "gulab jamun", "jalebi",
+      "masala chai", "nimbu paani", "aam panna", "thandai",
+      "upma", "poha", "dhokla", "khandvi", "thepla",
+      "kadhi", "sambhar", "rasam", "kootu", "poriyal"
+    ],
+    "international": [
+      "rice", "bread", "pasta", "pizza", "burger", "sandwich", "salad",
+      "soup", "chicken", "fish", "beef", "pork", "egg", "cheese",
+      "milk", "yogurt", "butter", "oil", "sugar", "salt",
+      "cereal", "oatmeal", "pancakes", "waffles", "toast",
+      "steak", "salmon", "tuna", "shrimp", "lobster",
+      "quinoa", "couscous", "bulgur", "barley", "millet"
+    ],
+    "vegetables": [
+      "tomato", "onion", "potato", "carrot", "spinach", "broccoli",
+      "cauliflower", "cabbage", "lettuce", "cucumber", "bell pepper",
+      "eggplant", "zucchini", "mushroom", "corn", "peas",
+      "beans", "lentils", "chickpeas", "sprouts", "radish",
+      "beetroot", "turnip", "sweet potato", "pumpkin", "bottle gourd"
+    ],
+    "fruits": [
+      "apple", "banana", "orange", "mango", "grapes", "strawberry",
+      "pineapple", "watermelon", "papaya", "guava", "pomegranate",
+      "kiwi", "peach", "plum", "cherry", "blueberry",
+      "coconut", "dates", "figs", "raisins", "almonds"
+    ]
+  },
+  "measurements": [
+    "cup", "cups", "tablespoon", "tablespoons", "teaspoon", "teaspoons",
+    "gram", "grams", "kilogram", "kilograms", "pound", "pounds",
+    "ounce", "ounces", "liter", "liters", "milliliter", "milliliters",
+    "piece", "pieces", "slice", "slices", "bowl", "bowls", "plate", "plates",
+    "handful", "pinch", "dash", "drop", "serving", "portion"
+  ],
+  "cooking_methods": [
+    "boiled", "fried", "grilled", "baked", "steamed", "roasted",
+    "sauteed", "stir-fried", "deep-fried", "pan-fried", "pressure-cooked",
+    "slow-cooked", "braised", "poached", "blanched", "marinated",
+    "tandoori", "tawa", "kadhai", "dum", "bhuna"
+  ],
+  "meal_types": [
+    "breakfast", "lunch", "dinner", "snack", "brunch",
+    "nashta", "khana", "raat ka khana", "tiffin",
+    "appetizer", "starter", "main course", "dessert", "beverage"
+  ],
+  "nutrition_terms": [
+    "calories", "protein", "carbohydrates", "fat", "fiber", "sugar",
+    "sodium", "cholesterol", "vitamins", "minerals", "antioxidants",
+    "omega-3", "calcium", "iron", "potassium", "magnesium",
+    "vitamin A", "vitamin C", "vitamin D", "vitamin B12", "folate"
+  ],
+  "hinglish_phrases": [
+    "khaya", "khana", "peena", "piya", "thoda", "zyada", "kam",
+    "accha", "tasty", "spicy", "meetha", "namkeen", "teekha",
+    "garam", "thanda", "fresh", "healthy", "nutritious",
+    "bharwa", "sukha", "gravy", "masala", "plain"
+  ],
+  "dietary_preferences": [
+    "vegetarian", "vegan", "non-vegetarian", "jain", "gluten-free",
+    "dairy-free", "sugar-free", "low-carb", "keto", "paleo",
+    "organic", "natural", "processed", "homemade", "restaurant"
+  ],
+  "spices_herbs": [
+    "turmeric", "cumin", "coriander", "cardamom", "cinnamon",
+    "cloves", "black pepper", "red chili", "garam masala", "curry leaves",
+    "mint", "cilantro", "ginger", "garlic", "onion powder",
+    "haldi", "jeera", "dhania", "elaichi", "dalchini"
+  ]
+}

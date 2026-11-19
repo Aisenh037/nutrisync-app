@@ -1,0 +1,48 @@
+# Cloud Build configuration for Voice AI Service
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'gcr.io/$PROJECT_ID/voice-ai-service:$BUILD_ID',
+      '-t', 'gcr.io/$PROJECT_ID/voice-ai-service:latest',
+      '.'
+    ]
+    dir: 'cloud_services/voice_ai_service'
+
+  # Push the Docker image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/voice-ai-service:$BUILD_ID']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/voice-ai-service:latest']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [
+      'run', 'deploy', 'voice-ai-service',
+      '--image', 'gcr.io/$PROJECT_ID/voice-ai-service:$BUILD_ID',
+      '--region', 'us-central1',
+      '--platform', 'managed',
+      '--allow-unauthenticated',
+      '--memory', '512Mi',
+      '--cpu', '1',
+      '--max-instances', '10',
+      '--set-env-vars', 'GCP_PROJECT_ID=$PROJECT_ID,GCP_REGION=us-central1',
+      '--set-env-vars', 'STT_LANGUAGE_CODE=en-US,TTS_LANGUAGE_CODE=en-US',
+      '--set-env-vars', 'SUPPORTED_LANGUAGES=en,hi,es,fr'
+    ]
+
+# Store images in Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/voice-ai-service:$BUILD_ID'
+  - 'gcr.io/$PROJECT_ID/voice-ai-service:latest'
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+# Timeout for the entire build
+timeout: '1200s'

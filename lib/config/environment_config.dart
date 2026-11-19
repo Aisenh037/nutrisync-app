@@ -48,7 +48,7 @@ class EnvironmentConfig {
     
     try {
       // Load environment-specific configuration
-      final configPath = 'assets/config/environments/${_environment}.json';
+      final configPath = 'assets/config/environments/$_environment.json';
       final configString = await rootBundle.loadString(configPath);
       _config = json.decode(configString) as Map<String, dynamic>;
       

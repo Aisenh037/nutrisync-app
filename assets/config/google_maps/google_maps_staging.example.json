@@ -1,0 +1,27 @@
+{
+  "google_maps": {
+    "api_key": "AIzaSyC_REPLACE_WITH_YOUR_STAGING_API_KEY",
+    "functions_base_url": "https://us-central1-nutrisync-staging.cloudfunctions.net",
+    "allowed_origins": [
+      "https://nutrisync-staging.web.app",
+      "https://staging.nutrisync.app"
+    ],
+    "restricted_apis": [
+      "places",
+      "directions",
+      "geocoding"
+    ],
+    "cors_enabled": true,
+    "rate_limits": {
+      "requests_per_minute": 200,
+      "requests_per_day": 25000
+    },
+    "features": {
+      "places_search": true,
+      "place_details": true,
+      "directions": true,
+      "geocoding": true,
+      "static_maps": false
+    }
+  }
+}

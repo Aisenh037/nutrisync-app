@@ -1,0 +1,3 @@
+# This directory will contain GCP service account keys
+# Service account keys should never be committed to version control
+# Use .env files or secure secret management in production

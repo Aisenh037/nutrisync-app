@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/providers.dart';
+import '../widgets/shimmer_widgets.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/offline_banner.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -28,7 +31,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: OfflineBannerWrapper(child: _pages[_selectedIndex]),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -213,11 +216,11 @@ class _GroceriesPageState extends ConsumerState<GroceriesPage> {
             const SizedBox(height: 24),
             Expanded(
               child: groceriesAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const GenericListSkeleton(),
                 error: (e, _) => Center(child: Text('Error: $e')),
                 data: (groceries) {
                   if (groceries.isEmpty) {
-                    return const Center(child: Text('No grocery items.'));
+                    return const NoGroceriesEmptyState();
                   }
                   return ListView.separated(
                     itemCount: groceries.length,
@@ -354,7 +357,7 @@ class HomePage extends ConsumerWidget {
         ),
       ),
       body: userAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const HomeScreenSkeleton(),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (user) {
           return Padding(
@@ -374,16 +377,19 @@ class HomePage extends ConsumerWidget {
                           fontSize: 18, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 12),
                   Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: mealPlanAsync.when(
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
+                        loading: () => const MealCardSkeleton(),
                         error: (e, _) => Text('Error: $e'),
                         data: (mealPlan) {
                           final meals = mealPlan[today] ?? [];
                           if (meals.isEmpty) {
-                            return const Text('No meals planned for today.');
+                            return NoMealsEmptyState(
+                              onAction: () => context.go('/ai-assistant'),
+                            );
                           }
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,8 +398,16 @@ class HomePage extends ConsumerWidget {
                                 Padding(
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: Text(meal,
-                                      style: const TextStyle(fontSize: 16)),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.fiber_manual_record,
+                                          size: 8,
+                                          color: Color(0xFF2D5B42)),
+                                      const SizedBox(width: 8),
+                                      Text(meal,
+                                          style: const TextStyle(fontSize: 16)),
+                                    ],
+                                  ),
                                 ),
                             ],
                           );
@@ -407,15 +421,16 @@ class HomePage extends ConsumerWidget {
                           fontSize: 18, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 12),
                   Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: groceriesAsync.when(
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
+                        loading: () => const GroceryCardSkeleton(),
                         error: (e, _) => Text('Error: $e'),
                         data: (groceries) {
                           if (groceries.isEmpty) {
-                            return const Text('No grocery items.');
+                            return const NoGroceriesEmptyState();
                           }
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -636,11 +651,11 @@ class _MealPlanPageState extends ConsumerState<MealPlanPage> {
             // Meal plan list
             Expanded(
               child: mealPlanAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const GenericListSkeleton(),
                 error: (e, _) => Center(child: Text('Error: $e')),
                 data: (mealPlan) {
                   if (mealPlan.isEmpty) {
-                    return const Center(child: Text('No meal plan available.'));
+                    return const NoMealPlanEmptyState();
                   }
                   return ListView(
                     children: [
@@ -734,11 +749,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ],
       ),
       body: userAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const GenericListSkeleton(count: 8),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (user) {
           if (user == null) {
-            return const Center(child: Text('No user data found.'));
+            return const EmptyState(
+              icon: Icons.person_off_outlined,
+              title: 'Profile not found',
+              subtitle: 'Your profile could not be loaded. Please sign out and back in.',
+            );
           }
           if (!_editing) {
             final appUser = user;
@@ -900,8 +919,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   title: const Text('Dark Theme'),
                   value: ref.watch(themeModeProvider) == ThemeMode.dark,
                   onChanged: (val) {
-                    ref.read(themeModeProvider.notifier).state =
-                        val ? ThemeMode.dark : ThemeMode.light;
+                    ref.read(themeModeProvider.notifier).setTheme(
+                      val ? ThemeMode.dark : ThemeMode.light,
+                    );
                   },
                 ),
                 SwitchListTile(

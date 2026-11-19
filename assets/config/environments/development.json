@@ -38,5 +38,67 @@
     "enableOfflineSupport": true,
     "cacheSizeBytes": 104857600,
     "enablePersistence": true
+  },
+  "gcp": {
+    "projectId": "nutrisync-gcp-dev",
+    "region": "us-central1",
+    "apis": {
+      "speechToText": {
+        "enabled": true,
+        "languageCode": "en-US",
+        "model": "latest_long",
+        "useEnhanced": true
+      },
+      "textToSpeech": {
+        "enabled": true,
+        "languageCode": "en-US",
+        "voiceName": "en-US-Neural2-F",
+        "audioEncoding": "MP3"
+      },
+      "vision": {
+        "enabled": true,
+        "features": ["OBJECT_LOCALIZATION", "TEXT_DETECTION", "LABEL_DETECTION"],
+        "maxResults": 10
+      },
+      "translation": {
+        "enabled": true,
+        "defaultTargetLanguage": "en",
+        "supportedLanguages": ["en", "es", "fr", "de", "it", "pt", "hi", "zh"]
+      },
+      "dialogflow": {
+        "enabled": true,
+        "agentId": "nutrisync-agent-dev",
+        "sessionTimeout": 300
+      },
+      "maps": {
+        "enabled": true,
+        "defaultRadius": 5000,
+        "maxResults": 20
+      },
+      "places": {
+        "enabled": true,
+        "types": ["grocery_or_supermarket", "health", "restaurant"],
+        "maxResults": 20
+      }
+    },
+    "services": {
+      "cloudRun": {
+        "region": "us-central1",
+        "maxInstances": 5,
+        "memory": "512Mi",
+        "cpu": "1000m"
+      },
+      "cloudFunctions": {
+        "region": "us-central1",
+        "runtime": "nodejs18",
+        "memory": "256MB",
+        "timeout": "60s"
+      }
+    },
+    "monitoring": {
+      "enabled": true,
+      "alerting": true,
+      "costThreshold": 50.0
+    }
   }
 }

@@ -5,6 +5,8 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/user_model.dart';
+import '../services/elevenlabs_tts_service.dart';
+import '../services/elevenlabs_fallback_manager.dart';
 
 class ElevenLabsAgentService {
   final String apiKey;
@@ -58,45 +60,51 @@ class ElevenLabsAgentService {
       responseText = 'For lunch, a grilled chicken salad with olive oil dressing would be great for your goals.';
     } // Add more logic as needed
 
-    // Use ElevenLabs TTS for audio
-    const voiceId = '21m00Tcm4TlvDq8ikWAM'; // Default voice ID (Rachel)
-    final ttsUrl = Uri.parse('https://api.elevenlabs.io/v1/text-to-speech/$voiceId');
-
-    final ttsBody = jsonEncode({
-      'text': responseText,
-      'model_id': 'eleven_monolingual_v1',
-      'voice_settings': {
-        'stability': 0.5,
-        'similarity_boost': 0.75,
-      },
-    });
-
-    final ttsResponse = await http.post(
-      ttsUrl,
-      headers: {
-        'xi-api-key': apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: ttsBody,
-    );
-
-    if (ttsResponse.statusCode == 200) {
-      final audioBytes = ttsResponse.bodyBytes;
-      final base64Audio = base64Encode(audioBytes);
-      final audioDataUri = 'data:audio/mpeg;base64,$base64Audio';
-
-      _conversationId ??= DateTime.now().millisecondsSinceEpoch.toString(); // Simple conversation ID
-
-      return {
-        'text': responseText,
-        'audio_url': audioDataUri,
-      };
-    } else {
-      print('TTS Error: ${ttsResponse.statusCode} - ${ttsResponse.body}');
+    // Use the new ElevenLabs TTS Service
+    try {
+      final ttsService = ElevenLabsTtsService.instance;
+      
+      // Initialize if not already done
+      if (!ttsService.isReady) {
+        await ttsService.initialize();
+      }
+      
+      // Synthesize speech using the new service with fallback
+      final result = await ttsService.synthesizeSpeechWithFallback(
+        responseText,
+        voiceSettings: VoiceSettings.defaultSettings(),
+      );
+      
+      _conversationId ??= DateTime.now().millisecondsSinceEpoch.toString();
+      
+      // Handle both TtsResult and FallbackResult
+      if (result is TtsResult) {
+        return {
+          'text': responseText,
+          'audio_url': result.audioDataUri,
+          'model_used': result.modelId,
+          'voice_used': result.voiceId,
+          'fallback_used': false,
+        };
+      } else if (result is FallbackResult) {
+        return {
+          'text': responseText,
+          'audio_url': result.audioUrl,
+          'fallback_used': true,
+          'fallback_strategy': result.strategy.name,
+          'fallback_message': result.message,
+          'user_notification': result.userNotification,
+        };
+      } else {
+        throw Exception('Unexpected result type from TTS service');
+      }
+    } catch (e) {
+      print('TTS Error: $e');
       // Fallback to text-only response
       return {
         'text': responseText,
         'audio_url': null,
+        'error': e.toString(),
       };
     }
   }

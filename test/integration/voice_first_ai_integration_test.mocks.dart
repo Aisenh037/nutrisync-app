@@ -8,10 +8,10 @@ import 'dart:typed_data' as _i5;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
-import 'package:nutrisync/models/user_model.dart' as _i2;
+import 'package:nutrisync/models/user_model.dart' as _i3;
 import 'package:nutrisync/services/user_profile_service.dart' as _i8;
 import 'package:nutrisync/voice/conversation_context_manager.dart' as _i7;
-import 'package:nutrisync/voice/voice_interface.dart' as _i3;
+import 'package:nutrisync/voice/voice_interface.dart' as _i2;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -27,9 +27,20 @@ import 'package:nutrisync/voice/voice_interface.dart' as _i3;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
-class _FakeFirestoreResult_0<T> extends _i1.SmartFake
-    implements _i2.FirestoreResult<T> {
-  _FakeFirestoreResult_0(
+class _FakeEnhancedVoiceInteractionResult_0 extends _i1.SmartFake
+    implements _i2.EnhancedVoiceInteractionResult {
+  _FakeEnhancedVoiceInteractionResult_0(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
+class _FakeFirestoreResult_1<T> extends _i1.SmartFake
+    implements _i3.FirestoreResult<T> {
+  _FakeFirestoreResult_1(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -41,14 +52,14 @@ class _FakeFirestoreResult_0<T> extends _i1.SmartFake
 /// A class which mocks [VoiceInterface].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockVoiceInterface extends _i1.Mock implements _i3.VoiceInterface {
+class MockVoiceInterface extends _i1.Mock implements _i2.VoiceInterface {
   MockVoiceInterface() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  bool get isListening => (super.noSuchMethod(
-        Invocation.getter(#isListening),
+  bool get isEnhancedVoiceAvailable => (super.noSuchMethod(
+        Invocation.getter(#isEnhancedVoiceAvailable),
         returnValue: false,
       ) as bool);
 
@@ -149,7 +160,7 @@ class MockVoiceInterface extends _i1.Mock implements _i3.VoiceInterface {
       ) as _i4.Future<void>);
 
   @override
-  _i4.Stream<_i3.VoiceInteraction> startConversation({
+  _i4.Stream<_i2.VoiceInteraction> startConversation({
     String? userId,
     Map<String, dynamic>? initialContext,
   }) =>
@@ -162,8 +173,8 @@ class MockVoiceInterface extends _i1.Mock implements _i3.VoiceInterface {
             #initialContext: initialContext,
           },
         ),
-        returnValue: _i4.Stream<_i3.VoiceInteraction>.empty(),
-      ) as _i4.Stream<_i3.VoiceInteraction>);
+        returnValue: _i4.Stream<_i2.VoiceInteraction>.empty(),
+      ) as _i4.Stream<_i2.VoiceInteraction>);
 
   @override
   void handleInterruption({String? reason}) => super.noSuchMethod(
@@ -253,6 +264,48 @@ class MockVoiceInterface extends _i1.Mock implements _i3.VoiceInterface {
       );
 
   @override
+  _i4.Future<_i2.EnhancedVoiceInteractionResult>
+      processEnhancedVoiceInteraction(
+    _i5.Uint8List? audioData, {
+    String? userId,
+    String? sessionId,
+    Map<String, dynamic>? context,
+  }) =>
+          (super.noSuchMethod(
+            Invocation.method(
+              #processEnhancedVoiceInteraction,
+              [audioData],
+              {
+                #userId: userId,
+                #sessionId: sessionId,
+                #context: context,
+              },
+            ),
+            returnValue: _i4.Future<_i2.EnhancedVoiceInteractionResult>.value(
+                _FakeEnhancedVoiceInteractionResult_0(
+              this,
+              Invocation.method(
+                #processEnhancedVoiceInteraction,
+                [audioData],
+                {
+                  #userId: userId,
+                  #sessionId: sessionId,
+                  #context: context,
+                },
+              ),
+            )),
+          ) as _i4.Future<_i2.EnhancedVoiceInteractionResult>);
+
+  @override
+  _i4.Future<bool> testEnhancedVoiceConnection() => (super.noSuchMethod(
+        Invocation.method(
+          #testEnhancedVoiceConnection,
+          [],
+        ),
+        returnValue: _i4.Future<bool>.value(false),
+      ) as _i4.Future<bool>);
+
+  @override
   _i4.Future<bool> testElevenLabsConnection() => (super.noSuchMethod(
         Invocation.method(
           #testElevenLabsConnection,
@@ -292,7 +345,7 @@ class MockUserProfileService extends _i1.Mock
   }
 
   @override
-  _i4.Future<_i2.FirestoreResult<_i2.UserModel>> createProfile({
+  _i4.Future<_i3.FirestoreResult<_i3.UserModel>> createProfile({
     required String? uid,
     required String? name,
     required String? email,
@@ -311,8 +364,8 @@ class MockUserProfileService extends _i1.Mock
             #healthGoals: healthGoals,
           },
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<_i2.UserModel>>.value(
-            _FakeFirestoreResult_0<_i2.UserModel>(
+        returnValue: _i4.Future<_i3.FirestoreResult<_i3.UserModel>>.value(
+            _FakeFirestoreResult_1<_i3.UserModel>(
           this,
           Invocation.method(
             #createProfile,
@@ -326,10 +379,10 @@ class MockUserProfileService extends _i1.Mock
             },
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<_i2.UserModel>>);
+      ) as _i4.Future<_i3.FirestoreResult<_i3.UserModel>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<_i2.UserModel>> updateProfile({
+  _i4.Future<_i3.FirestoreResult<_i3.UserModel>> updateProfile({
     required String? uid,
     String? name,
     String? email,
@@ -368,8 +421,8 @@ class MockUserProfileService extends _i1.Mock
             #culturalPreferences: culturalPreferences,
           },
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<_i2.UserModel>>.value(
-            _FakeFirestoreResult_0<_i2.UserModel>(
+        returnValue: _i4.Future<_i3.FirestoreResult<_i3.UserModel>>.value(
+            _FakeFirestoreResult_1<_i3.UserModel>(
           this,
           Invocation.method(
             #updateProfile,
@@ -393,27 +446,27 @@ class MockUserProfileService extends _i1.Mock
             },
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<_i2.UserModel>>);
+      ) as _i4.Future<_i3.FirestoreResult<_i3.UserModel>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<_i2.UserModel>> getProfile(String? uid) =>
+  _i4.Future<_i3.FirestoreResult<_i3.UserModel>> getProfile(String? uid) =>
       (super.noSuchMethod(
         Invocation.method(
           #getProfile,
           [uid],
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<_i2.UserModel>>.value(
-            _FakeFirestoreResult_0<_i2.UserModel>(
+        returnValue: _i4.Future<_i3.FirestoreResult<_i3.UserModel>>.value(
+            _FakeFirestoreResult_1<_i3.UserModel>(
           this,
           Invocation.method(
             #getProfile,
             [uid],
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<_i2.UserModel>>);
+      ) as _i4.Future<_i3.FirestoreResult<_i3.UserModel>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<void>> addMedicalCondition(
+  _i4.Future<_i3.FirestoreResult<void>> addMedicalCondition(
     String? uid,
     String? condition,
   ) =>
@@ -425,8 +478,8 @@ class MockUserProfileService extends _i1.Mock
             condition,
           ],
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<void>>.value(
-            _FakeFirestoreResult_0<void>(
+        returnValue: _i4.Future<_i3.FirestoreResult<void>>.value(
+            _FakeFirestoreResult_1<void>(
           this,
           Invocation.method(
             #addMedicalCondition,
@@ -436,10 +489,10 @@ class MockUserProfileService extends _i1.Mock
             ],
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<void>>);
+      ) as _i4.Future<_i3.FirestoreResult<void>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<void>> removeMedicalCondition(
+  _i4.Future<_i3.FirestoreResult<void>> removeMedicalCondition(
     String? uid,
     String? condition,
   ) =>
@@ -451,8 +504,8 @@ class MockUserProfileService extends _i1.Mock
             condition,
           ],
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<void>>.value(
-            _FakeFirestoreResult_0<void>(
+        returnValue: _i4.Future<_i3.FirestoreResult<void>>.value(
+            _FakeFirestoreResult_1<void>(
           this,
           Invocation.method(
             #removeMedicalCondition,
@@ -462,10 +515,10 @@ class MockUserProfileService extends _i1.Mock
             ],
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<void>>);
+      ) as _i4.Future<_i3.FirestoreResult<void>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<void>> addAllergy(
+  _i4.Future<_i3.FirestoreResult<void>> addAllergy(
     String? uid,
     String? allergy,
   ) =>
@@ -477,8 +530,8 @@ class MockUserProfileService extends _i1.Mock
             allergy,
           ],
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<void>>.value(
-            _FakeFirestoreResult_0<void>(
+        returnValue: _i4.Future<_i3.FirestoreResult<void>>.value(
+            _FakeFirestoreResult_1<void>(
           this,
           Invocation.method(
             #addAllergy,
@@ -488,10 +541,10 @@ class MockUserProfileService extends _i1.Mock
             ],
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<void>>);
+      ) as _i4.Future<_i3.FirestoreResult<void>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<void>> removeAllergy(
+  _i4.Future<_i3.FirestoreResult<void>> removeAllergy(
     String? uid,
     String? allergy,
   ) =>
@@ -503,8 +556,8 @@ class MockUserProfileService extends _i1.Mock
             allergy,
           ],
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<void>>.value(
-            _FakeFirestoreResult_0<void>(
+        returnValue: _i4.Future<_i3.FirestoreResult<void>>.value(
+            _FakeFirestoreResult_1<void>(
           this,
           Invocation.method(
             #removeAllergy,
@@ -514,10 +567,10 @@ class MockUserProfileService extends _i1.Mock
             ],
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<void>>);
+      ) as _i4.Future<_i3.FirestoreResult<void>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<void>> updateDietaryPreferences({
+  _i4.Future<_i3.FirestoreResult<void>> updateDietaryPreferences({
     required String? uid,
     required List<String>? dietaryNeeds,
     required List<String>? foodDislikes,
@@ -532,8 +585,8 @@ class MockUserProfileService extends _i1.Mock
             #foodDislikes: foodDislikes,
           },
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<void>>.value(
-            _FakeFirestoreResult_0<void>(
+        returnValue: _i4.Future<_i3.FirestoreResult<void>>.value(
+            _FakeFirestoreResult_1<void>(
           this,
           Invocation.method(
             #updateDietaryPreferences,
@@ -545,10 +598,10 @@ class MockUserProfileService extends _i1.Mock
             },
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<void>>);
+      ) as _i4.Future<_i3.FirestoreResult<void>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<void>> updateHealthGoals(
+  _i4.Future<_i3.FirestoreResult<void>> updateHealthGoals(
     String? uid,
     List<String>? healthGoals,
   ) =>
@@ -560,8 +613,8 @@ class MockUserProfileService extends _i1.Mock
             healthGoals,
           ],
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<void>>.value(
-            _FakeFirestoreResult_0<void>(
+        returnValue: _i4.Future<_i3.FirestoreResult<void>>.value(
+            _FakeFirestoreResult_1<void>(
           this,
           Invocation.method(
             #updateHealthGoals,
@@ -571,10 +624,10 @@ class MockUserProfileService extends _i1.Mock
             ],
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<void>>);
+      ) as _i4.Future<_i3.FirestoreResult<void>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<void>> updateCulturalPreferences({
+  _i4.Future<_i3.FirestoreResult<void>> updateCulturalPreferences({
     required String? uid,
     required Map<String, dynamic>? culturalPreferences,
   }) =>
@@ -587,8 +640,8 @@ class MockUserProfileService extends _i1.Mock
             #culturalPreferences: culturalPreferences,
           },
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<void>>.value(
-            _FakeFirestoreResult_0<void>(
+        returnValue: _i4.Future<_i3.FirestoreResult<void>>.value(
+            _FakeFirestoreResult_1<void>(
           this,
           Invocation.method(
             #updateCulturalPreferences,
@@ -599,10 +652,10 @@ class MockUserProfileService extends _i1.Mock
             },
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<void>>);
+      ) as _i4.Future<_i3.FirestoreResult<void>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<void>> updatePhysicalMeasurements({
+  _i4.Future<_i3.FirestoreResult<void>> updatePhysicalMeasurements({
     required String? uid,
     int? age,
     String? gender,
@@ -623,8 +676,8 @@ class MockUserProfileService extends _i1.Mock
             #activityLevel: activityLevel,
           },
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<void>>.value(
-            _FakeFirestoreResult_0<void>(
+        returnValue: _i4.Future<_i3.FirestoreResult<void>>.value(
+            _FakeFirestoreResult_1<void>(
           this,
           Invocation.method(
             #updatePhysicalMeasurements,
@@ -639,10 +692,10 @@ class MockUserProfileService extends _i1.Mock
             },
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<void>>);
+      ) as _i4.Future<_i3.FirestoreResult<void>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<List<_i2.UserModel>>> getSimilarUsers(
+  _i4.Future<_i3.FirestoreResult<List<_i3.UserModel>>> getSimilarUsers(
     String? uid, {
     int? limit = 10,
   }) =>
@@ -652,8 +705,8 @@ class MockUserProfileService extends _i1.Mock
           [uid],
           {#limit: limit},
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<List<_i2.UserModel>>>.value(
-            _FakeFirestoreResult_0<List<_i2.UserModel>>(
+        returnValue: _i4.Future<_i3.FirestoreResult<List<_i3.UserModel>>>.value(
+            _FakeFirestoreResult_1<List<_i3.UserModel>>(
           this,
           Invocation.method(
             #getSimilarUsers,
@@ -661,41 +714,41 @@ class MockUserProfileService extends _i1.Mock
             {#limit: limit},
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<List<_i2.UserModel>>>);
+      ) as _i4.Future<_i3.FirestoreResult<List<_i3.UserModel>>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<Map<String, bool>>>
+  _i4.Future<_i3.FirestoreResult<Map<String, bool>>>
       validateProfileCompleteness(String? uid) => (super.noSuchMethod(
             Invocation.method(
               #validateProfileCompleteness,
               [uid],
             ),
             returnValue:
-                _i4.Future<_i2.FirestoreResult<Map<String, bool>>>.value(
-                    _FakeFirestoreResult_0<Map<String, bool>>(
+                _i4.Future<_i3.FirestoreResult<Map<String, bool>>>.value(
+                    _FakeFirestoreResult_1<Map<String, bool>>(
               this,
               Invocation.method(
                 #validateProfileCompleteness,
                 [uid],
               ),
             )),
-          ) as _i4.Future<_i2.FirestoreResult<Map<String, bool>>>);
+          ) as _i4.Future<_i3.FirestoreResult<Map<String, bool>>>);
 
   @override
-  _i4.Future<_i2.FirestoreResult<double>> getProfileCompletionPercentage(
+  _i4.Future<_i3.FirestoreResult<double>> getProfileCompletionPercentage(
           String? uid) =>
       (super.noSuchMethod(
         Invocation.method(
           #getProfileCompletionPercentage,
           [uid],
         ),
-        returnValue: _i4.Future<_i2.FirestoreResult<double>>.value(
-            _FakeFirestoreResult_0<double>(
+        returnValue: _i4.Future<_i3.FirestoreResult<double>>.value(
+            _FakeFirestoreResult_1<double>(
           this,
           Invocation.method(
             #getProfileCompletionPercentage,
             [uid],
           ),
         )),
-      ) as _i4.Future<_i2.FirestoreResult<double>>);
+      ) as _i4.Future<_i3.FirestoreResult<double>>);
 }
