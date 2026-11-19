@@ -1,6 +1,8 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const cors = require('cors')({ origin: true });
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { Client } = require('@googlemaps/google-maps-services-js');
 
 // Initialize Firebase Admin
@@ -8,6 +10,15 @@ admin.initializeApp();
 
 // Initialize Google Maps client
 const mapsClient = new Client({});
+
+// Rate limit: 60 requests / minute per IP
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
 
 // Get Google Maps API key from environment
 const GOOGLE_MAPS_API_KEY = functions.config().google?.maps_api_key || process.env.GOOGLE_MAPS_API_KEY;
