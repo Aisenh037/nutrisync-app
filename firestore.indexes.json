@@ -119,6 +119,20 @@
         { "fieldPath": "subscriptionTier", "order": "ASCENDING" },
         { "fieldPath": "subscriptionExpiresAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "conversation_turns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "conversation_turns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "timestamp", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

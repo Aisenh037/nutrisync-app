@@ -1,674 +1,569 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../config/secure_key_manager.dart';
+import '../providers/providers.dart';
+import '../services/conversation_memory_service.dart';
+import '../services/food_vision_ai_service.dart';
+import '../services/performance_service.dart';
 import '../voice_first_ai/service_orchestrator.dart';
-import '../voice/hinglish_processor.dart';
+import '../widgets/food_confidence_sheet.dart';
 import '../widgets/premium_feature_gate.dart';
 
-/// Voice-First AI Assistant Screen - Main UI for voice interactions
-/// Integrates all services into cohesive user experience with visual feedback
+// ── Voice AI screen ───────────────────────────────────────────────────────────
+
 class VoiceAIAssistantScreen extends ConsumerStatefulWidget {
   const VoiceAIAssistantScreen({super.key});
 
   @override
-  ConsumerState<VoiceAIAssistantScreen> createState() => _VoiceAIAssistantScreenState();
+  ConsumerState<VoiceAIAssistantScreen> createState() =>
+      _VoiceAIAssistantScreenState();
 }
 
-class _VoiceAIAssistantScreenState extends ConsumerState<VoiceAIAssistantScreen> 
+class _VoiceAIAssistantScreenState
+    extends ConsumerState<VoiceAIAssistantScreen>
     with PremiumFeatureMixin, TickerProviderStateMixin {
-  // Core service orchestrator
+  // ── Services ────────────────────────────────────────────────────────────────
   late VoiceFirstAIServiceOrchestrator _orchestrator;
-  
-  // UI state
-  final List<ChatMessage> _messages = [];
+  final _memory = ConversationMemoryService.instance;
+  final _foodVision = FoodVisionAIService.instance;
+  final _imagePicker = ImagePicker();
+
+  // ── UI state ─────────────────────────────────────────────────────────────────
+  final List<_ChatMessage> _messages = [];
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  
-  // Voice state
+
   bool _isListening = false;
   bool _isProcessing = false;
   bool _isInitialized = false;
+  bool _isScanningFood = false;
   VoiceConversationSession? _currentSession;
-  
-  // Animation controllers
+
+  // ── Animations ───────────────────────────────────────────────────────────────
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
-    _initializeServices();
-  }
-
-  void _initializeAnimations() {
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 900),
       vsync: this,
     );
-    
-    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+    _pulseAnimation = Tween<double>(begin: 0.85, end: 1.15).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-  }
-
-  Future<void> _initializeServices() async {
-    try {
-      setState(() {
-        _isProcessing = true;
-      });
-
-      // Initialize the service orchestrator with all dependencies
-      _orchestrator = VoiceFirstAIServiceOrchestrator();
-
-      final initialized = await _orchestrator.initialize(
-        elevenLabsApiKey: 'sk_8b912284e3bb7ee8a1d07041dcece48038550ccaa9b19007',
-        voiceId: 'pNInz6obpgDQGcFmaJgB', // Adam voice
-      );
-
-      if (!initialized) {
-        throw Exception('Failed to initialize service orchestrator');
-      }
-
-      // Start voice conversation session
-      _currentSession = await _orchestrator.startVoiceConversation(
-        userId: 'demo-user',
-        initialContext: {
-          'preferredLanguage': 'hinglish',
-          'culturalContext': 'indian',
-        },
-      );
-      
-      setState(() {
-        _isInitialized = true;
-        _isProcessing = false;
-      });
-      
-      _addMessage(
-        'Namaste! 🙏 Main aapka personal nutrition assistant hun.\\n\\n'
-        '🍽️ Meal logging kar sakte hain\\n'
-        '💡 Nutrition advice le sakte hain\\n'
-        '🥗 Healthy recipes puch sakte hain\\n'
-        '🛒 Grocery list banwa sakte hain\\n\\n'
-        'Voice button dabayiye ya type kariye!',
-        false,
-        messageType: MessageType.welcome,
-      );
-    } catch (e) {
-      setState(() {
-        _isProcessing = false;
-      });
-      _addMessage(
-        'Sorry, main initialize nahi ho paya. Please restart the app.\\nError: $e',
-        false,
-        messageType: MessageType.error,
-      );
-    }
-  }
-
-  void _addMessage(String text, bool isUser, {MessageType messageType = MessageType.normal}) {
-    setState(() {
-      _messages.add(ChatMessage(
-        text: text,
-        isUser: isUser,
-        timestamp: DateTime.now(),
-        messageType: messageType,
-      ));
-    });
-    
-    // Auto-scroll to bottom
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  Future<void> _startVoiceInput() async {
-    if (_isListening || _isProcessing || !_isInitialized) return;
-
-    // Check query limit before processing
-    final canMakeQuery = await checkQueryLimit(ref);
-    if (!canMakeQuery) {
-      if (mounted) {
-        showUpgradeDialog(context, 'unlimited_voice_queries');
-      }
-      return;
-    }
-
-    setState(() {
-      _isListening = true;
-    });
-    
-    // Start pulse animation
-    _pulseController.repeat(reverse: true);
-
-    try {
-      // Use orchestrator for complete voice interaction
-      final result = await _orchestrator.listenAndProcess(
-        userId: 'demo-user',
-        timeoutSeconds: 10,
-      );
-      
-      if (result.userInput.isNotEmpty) {
-        _addMessage(result.userInput, true);
-        
-        // Add system response with appropriate message type
-        final messageType = _mapInteractionTypeToMessageType(result.interactionType);
-        _addMessage(result.systemResponse, false, messageType: messageType);
-        
-        // Add suggestions if available
-        if (result.suggestions.isNotEmpty) {
-          _addSuggestions(result.suggestions);
-        }
-        
-        // Increment query count after successful processing
-        await incrementQueryCount(ref);
-      } else {
-        _addMessage('Koi speech detect nahi hui. Please try again.', false, messageType: MessageType.info);
-      }
-    } catch (e) {
-      _addMessage('Voice input error: ${e.toString()}', false, messageType: MessageType.error);
-    } finally {
-      setState(() {
-        _isListening = false;
-      });
-      _pulseController.stop();
-      _pulseController.reset();
-    }
-  }
-
-  Future<void> _processUserInput(String input) async {
-    if (_isProcessing) return;
-
-    setState(() {
-      _isProcessing = true;
-    });
-
-    try {
-      // Use orchestrator for complete processing
-      final result = await _orchestrator.processVoiceInteraction(
-        userInput: input,
-        userId: 'demo-user',
-        sessionId: _currentSession?.sessionId,
-      );
-      
-      // Add system response with appropriate message type
-      final messageType = _mapInteractionTypeToMessageType(result.interactionType);
-      _addMessage(result.systemResponse, false, messageType: messageType);
-      
-      // Add suggestions if available
-      if (result.suggestions.isNotEmpty) {
-        _addSuggestions(result.suggestions);
-      }
-      
-      // Handle clarification requests
-      if (result.requiresClarification && result.ambiguities.isNotEmpty) {
-        _handleAmbiguities(result.ambiguities);
-      }
-      
-    } catch (e) {
-      _addMessage('Processing error: ${e.toString()}', false, messageType: MessageType.error);
-    } finally {
-      setState(() {
-        _isProcessing = false;
-      });
-    }
-  }
-
-  MessageType _mapInteractionTypeToMessageType(VoiceInteractionType interactionType) {
-    switch (interactionType) {
-      case VoiceInteractionType.mealLogging:
-        return MessageType.success;
-      case VoiceInteractionType.recommendation:
-        return MessageType.recommendation;
-      case VoiceInteractionType.cookingEducation:
-        return MessageType.education;
-      case VoiceInteractionType.groceryManagement:
-        return MessageType.grocery;
-      case VoiceInteractionType.nutritionQuery:
-        return MessageType.info;
-      case VoiceInteractionType.error:
-        return MessageType.error;
-      default:
-        return MessageType.normal;
-    }
-  }
-
-  void _addSuggestions(List<String> suggestions) {
-    if (suggestions.isEmpty) return;
-    
-    final suggestionText = '💡 **Suggestions:**\\n${suggestions.take(3).map((s) => '• $s').join('\\n')}';
-    
-    _addMessage(suggestionText, false, messageType: MessageType.info);
-  }
-
-  void _handleAmbiguities(List<FoodAmbiguity> ambiguities) {
-    if (ambiguities.isEmpty) return;
-    
-    final clarificationText = '🤔 **Clarification needed:**\\n${ambiguities.take(2).map((a) => '• ${a.term}: ${a.possibleMeanings.join(", ")}').join('\\n')}\\n\\nKripaya specify kariye!';
-    
-    _addMessage(clarificationText, false, messageType: MessageType.info);
-  }
-
-  Widget _buildQuickActionButton(String label, String prompt, IconData icon) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue[100]!, Colors.blue[200]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue[300]!),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () => _handleQuickAction(prompt),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 16, color: Colors.blue[700]),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.blue[700],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleQuickAction(String prompt) async {
-    _textController.text = prompt;
-    await _handleTextInput(prompt);
-  }
-
-  Future<void> _handleTextInput(String text) async {
-    if (text.trim().isEmpty) return;
-    
-    // Check query limit for text input
-    final canMakeQuery = await checkQueryLimit(ref);
-    if (!canMakeQuery) {
-      if (mounted) {
-        showUpgradeDialog(context, 'unlimited_voice_queries');
-      }
-      return;
-    }
-    
-    _addMessage(text, true);
-    _textController.clear();
-    await _processUserInput(text);
-    
-    // Increment query count after successful processing
-    await incrementQueryCount(ref);
+    _initializeServices();
   }
 
   @override
   void dispose() {
-    if (_isInitialized) {
-      _orchestrator.dispose();
-    }
+    if (_isInitialized) _orchestrator.dispose();
     _pulseController.dispose();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
+  // ── Initialisation ────────────────────────────────────────────────────────────
+
+  Future<void> _initializeServices() async {
+    setState(() => _isProcessing = true);
+    try {
+      // ── 1. API key from SecureKeyManager (never hardcoded) ──────────────────
+      final elevenLabsKey =
+          await SecureKeyManager.instance.getApiKey('elevenlabs') ?? '';
+
+      _orchestrator = VoiceFirstAIServiceOrchestrator();
+      final ok = await _orchestrator.initialize(
+        elevenLabsApiKey: elevenLabsKey,
+        voiceId: 'pNInz6obpgDQGcFmaJgB',
+      );
+      if (!ok) throw Exception('Orchestrator init failed');
+
+      final userId = _currentUserId();
+      _currentSession = await _orchestrator.startVoiceConversation(
+        userId: userId,
+        initialContext: {
+          'preferredLanguage': 'hinglish',
+          'culturalContext': 'indian',
+        },
+      );
+
+      // ── 2. Load persisted history ───────────────────────────────────────────
+      await _loadHistory(userId);
+
+      setState(() {
+        _isInitialized = true;
+        _isProcessing = false;
+      });
+
+      if (_messages.isEmpty) {
+        _addMessage(
+          'Namaste! 🙏 Main aapka personal nutrition assistant hun.\n\n'
+          '🍽️ Meal logging kar sakte hain\n'
+          '📸 Khana photo se scan karein\n'
+          '💡 Nutrition advice le sakte hain\n'
+          '🛒 Grocery list banwa sakte hain\n\n'
+          'Voice button dabayiye ya type kariye!',
+          role: 'assistant',
+          messageType: _MessageType.welcome,
+        );
+      }
+    } catch (e) {
+      setState(() => _isProcessing = false);
+      _addMessage(
+        'Sorry, initialize nahi ho paya. Please restart karein.\n$e',
+        role: 'assistant',
+        messageType: _MessageType.error,
+      );
+    }
+  }
+
+  Future<void> _loadHistory(String userId) async {
+    final turns = await _memory.loadHistory(userId);
+    if (turns.isEmpty) return;
+    setState(() {
+      for (final t in turns) {
+        _messages.add(_ChatMessage(
+          text: t.text,
+          role: t.role,
+          timestamp: t.timestamp,
+          messageType: _MessageType.normal,
+        ));
+      }
+    });
+  }
+
+  // ── Message management ────────────────────────────────────────────────────────
+
+  void _addMessage(
+    String text, {
+    required String role,
+    _MessageType messageType = _MessageType.normal,
+  }) {
+    setState(() {
+      _messages.add(_ChatMessage(
+        text: text,
+        role: role,
+        timestamp: DateTime.now(),
+        messageType: messageType,
+      ));
+    });
+    _scrollToBottom();
+  }
+
+  /// Adds a placeholder bubble and streams the text in word-by-word.
+  /// Returns after the stream completes.
+  Future<void> _streamMessage(
+    String fullText, {
+    _MessageType messageType = _MessageType.normal,
+  }) async {
+    final words = fullText.split(' ');
+    final placeholder = _ChatMessage(
+      text: '',
+      role: 'assistant',
+      timestamp: DateTime.now(),
+      messageType: messageType,
+      isStreaming: true,
+    );
+    setState(() => _messages.add(placeholder));
+    _scrollToBottom();
+
+    final buffer = StringBuffer();
+    for (final word in words) {
+      await Future<void>.delayed(const Duration(milliseconds: 28));
+      buffer.write(word);
+      buffer.write(' ');
+      setState(() {
+        _messages.last = placeholder.copyWith(text: buffer.toString().trim());
+      });
+      _scrollToBottom();
+    }
+    // Mark streaming done
+    setState(() {
+      _messages.last = _messages.last.copyWith(isStreaming: false);
+    });
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  // ── Voice input ───────────────────────────────────────────────────────────────
+
+  Future<void> _startVoiceInput() async {
+    if (_isListening || _isProcessing || !_isInitialized) return;
+    if (!await checkQueryLimit(ref)) {
+      if (mounted) showUpgradeDialog(context, 'unlimited_voice_queries');
+      return;
+    }
+
+    setState(() => _isListening = true);
+    _pulseController.repeat(reverse: true);
+
+    try {
+      final userId = _currentUserId();
+      final result = await PerformanceService.traceAsync(
+        PerformanceService.kVoiceQuery,
+        () => _orchestrator.listenAndProcess(
+          userId: userId,
+          timeoutSeconds: 10,
+        ),
+      );
+
+      if (result.userInput.isNotEmpty) {
+        _addMessage(result.userInput, role: 'user');
+        await _memory.saveTurn(
+          userId: userId,
+          role: 'user',
+          text: result.userInput,
+          sessionId: _currentSession?.sessionId,
+        );
+        await _deliverResponse(result);
+        await incrementQueryCount(ref);
+      } else {
+        _addMessage('Koi speech detect nahi hui. Please try again.',
+            role: 'assistant', messageType: _MessageType.info);
+      }
+    } catch (e) {
+      _addMessage('Voice input error: $e',
+          role: 'assistant', messageType: _MessageType.error);
+    } finally {
+      setState(() => _isListening = false);
+      _pulseController.stop();
+      _pulseController.reset();
+    }
+  }
+
+  // ── Text input ────────────────────────────────────────────────────────────────
+
+  Future<void> _handleTextInput(String text) async {
+    if (text.trim().isEmpty || _isProcessing) return;
+    if (!await checkQueryLimit(ref)) {
+      if (mounted) showUpgradeDialog(context, 'unlimited_voice_queries');
+      return;
+    }
+
+    _addMessage(text.trim(), role: 'user');
+    _textController.clear();
+    await _memory.saveTurn(
+      userId: _currentUserId(),
+      role: 'user',
+      text: text.trim(),
+      sessionId: _currentSession?.sessionId,
+    );
+    setState(() => _isProcessing = true);
+    try {
+      final result = await _orchestrator.processVoiceInteraction(
+        userInput: text.trim(),
+        userId: _currentUserId(),
+        sessionId: _currentSession?.sessionId,
+      );
+      await _deliverResponse(result);
+      await incrementQueryCount(ref);
+    } catch (e) {
+      _addMessage('Error: $e', role: 'assistant', messageType: _MessageType.error);
+    } finally {
+      setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _deliverResponse(VoiceInteractionResult result) async {
+    final type = _messageTypeFor(result.interactionType);
+    await _streamMessage(result.systemResponse, messageType: type);
+
+    await _memory.saveTurn(
+      userId: _currentUserId(),
+      role: 'assistant',
+      text: result.systemResponse,
+      sessionId: _currentSession?.sessionId,
+      interactionType: result.interactionType.name,
+    );
+
+    if (result.suggestions.isNotEmpty) {
+      final hint = '💡 ${result.suggestions.take(3).map((s) => '• $s').join('\n')}';
+      _addMessage(hint, role: 'assistant', messageType: _MessageType.info);
+    }
+    if (result.requiresClarification && result.ambiguities.isNotEmpty) {
+      final clarify = '🤔 ${result.ambiguities.take(2).map((a) => '• ${a.term}: ${a.possibleMeanings.join(", ")}').join('\n')}\n\nKripaya specify kariye!';
+      _addMessage(clarify, role: 'assistant', messageType: _MessageType.info);
+    }
+  }
+
+  // ── Food vision scan ──────────────────────────────────────────────────────────
+
+  Future<void> _openFoodScan() async {
+    if (_isScanningFood) return;
+    final isPremium = ref.read(isPremiumProvider);
+    final scansUsed = 0; // TODO: wire to daily counter from subscriptionStatusProvider
+
+    if (!isPremium && scansUsed >= 3) {
+      if (mounted) showUpgradeDialog(context, 'food_vision_unlimited');
+      return;
+    }
+
+    final file = await _imagePicker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 80,
+    );
+    if (file == null || !mounted) return;
+
+    setState(() => _isScanningFood = true);
+    _addMessage('📸 Scanning your food...', role: 'assistant', messageType: _MessageType.info);
+
+    try {
+      final bytes = await file.readAsBytes();
+      final result = await PerformanceService.traceAsync(
+        PerformanceService.kFoodVisionScan,
+        () => _foodVision.analyzeFoodImage(
+          bytes,
+          userId: _currentUserId(),
+          confidenceThreshold: 0.75,
+        ),
+      );
+
+      if (!mounted) return;
+
+      if (result.error != null) {
+        _addMessage('Scan failed: ${result.error}',
+            role: 'assistant', messageType: _MessageType.error);
+        return;
+      }
+
+      await FoodConfidenceSheet.show(
+        context: context,
+        result: result,
+        onConfirm: (items) => _logScannedItems(items),
+        onRescan: _openFoodScan,
+      );
+    } catch (e) {
+      if (mounted) {
+        _addMessage('Scan error: $e', role: 'assistant', messageType: _MessageType.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isScanningFood = false);
+    }
+  }
+
+  void _logScannedItems(List<DetectedFoodItem> items) {
+    final names = items.map((i) => i.name).join(', ');
+    final summary = 'Logged from photo: $names';
+    _addMessage(summary, role: 'user');
+    _handleTextInput('Maine khaya: $names');
+  }
+
+  // ── Quick actions ─────────────────────────────────────────────────────────────
+
+  Future<void> _handleQuickAction(String prompt) async {
+    _textController.text = prompt;
+    await _handleTextInput(prompt);
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+
+  String _currentUserId() =>
+      ref.read(authStateProvider).asData?.value?.uid ?? 'anonymous';
+
+  _MessageType _messageTypeFor(VoiceInteractionType t) {
+    switch (t) {
+      case VoiceInteractionType.mealLogging:
+        return _MessageType.success;
+      case VoiceInteractionType.recommendation:
+        return _MessageType.recommendation;
+      case VoiceInteractionType.cookingEducation:
+        return _MessageType.education;
+      case VoiceInteractionType.groceryManagement:
+        return _MessageType.grocery;
+      case VoiceInteractionType.nutritionQuery:
+        return _MessageType.info;
+      case VoiceInteractionType.error:
+        return _MessageType.error;
+      default:
+        return _MessageType.normal;
+    }
+  }
+
+  List<Color> _statusGradient() {
+    if (!_isInitialized) return [Colors.orange.shade400, Colors.orange.shade600];
+    if (_isListening) return [Colors.red.shade400, Colors.red.shade600];
+    if (_isProcessing || _isScanningFood) return [Colors.blue.shade400, Colors.blue.shade600];
+    return [Colors.green.shade400, Colors.green.shade600];
+  }
+
+  IconData _statusIcon() {
+    if (!_isInitialized) return Icons.hourglass_empty;
+    if (_isListening) return Icons.mic;
+    if (_isProcessing) return Icons.psychology;
+    if (_isScanningFood) return Icons.camera_alt;
+    return Icons.check_circle;
+  }
+
+  String _statusTitle() {
+    if (!_isInitialized) return 'Initializing...';
+    if (_isListening) return 'Listening...';
+    if (_isProcessing) return 'Processing...';
+    if (_isScanningFood) return 'Scanning food...';
+    return 'Ready to Help!';
+  }
+
+  String _statusSubtitle() {
+    if (!_isInitialized) return 'Setting up your AI assistant';
+    if (_isListening) return 'Speak in Hindi or English';
+    if (_isProcessing) return 'Understanding your request';
+    if (_isScanningFood) return 'Analyzing your meal photo';
+    return 'Tap mic, camera, or type below';
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🤖 Voice AI Nutrition Assistant'),
-        backgroundColor: Colors.green[700],
+        title: const Text('Voice AI Nutrition'),
+        backgroundColor: Colors.green.shade700,
         foregroundColor: Colors.white,
-        elevation: 2,
         actions: [
           IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Clear history',
+            onPressed: () async {
+              final uid = _currentUserId();
+              await _memory.clearHistory(uid);
+              setState(() => _messages.clear());
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.info_outline),
-            onPressed: () => _showHelpDialog(),
+            onPressed: _showHelpDialog,
           ),
         ],
       ),
       body: Column(
         children: [
-          // Query limit warning
           const QueryLimitWarning(),
-          
-          // Status indicator with enhanced visual feedback
+
+          // Status bar
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: _getStatusGradientColors(),
+                colors: _statusGradient(),
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: _getStatusColor().withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Row(
               children: [
                 AnimatedBuilder(
                   animation: _pulseAnimation,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _isListening ? _pulseAnimation.value : 1.0,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                        child: Icon(
-                          _getStatusIcon(),
-                          color: _getStatusColor(),
-                          size: 24,
-                        ),
+                  builder: (_, __) => Transform.scale(
+                    scale: _isListening ? _pulseAnimation.value : 1.0,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white24,
                       ),
-                    );
-                  },
+                      child: Icon(_statusIcon(), color: Colors.white, size: 22),
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _getStatusTitle(),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        _getStatusSubtitle(),
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 14,
-                        ),
-                      ),
+                      Text(_statusTitle(),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15)),
+                      Text(_statusSubtitle(),
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 12)),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          
-          // Chat messages with enhanced UI
+
+          // Chat list
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.grey[50]!,
-                    Colors.white,
-                  ],
-                ),
-              ),
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final message = _messages[index];
-                  return EnhancedChatBubble(message: message);
-                },
-              ),
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(14),
+              itemCount: _messages.length,
+              itemBuilder: (_, i) => _ChatBubble(message: _messages[i]),
             ),
           ),
-          
-          // Enhanced input area with quick actions
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey[300]!)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Column(
-                children: [
-                  // Quick action buttons
-                  if (_isInitialized && !_isProcessing && !_isListening)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _buildQuickActionButton(
-                              '🍽️ Log Meal',
-                              'Maine khaya...',
-                              Icons.restaurant,
-                            ),
-                            const SizedBox(width: 8),
-                            _buildQuickActionButton(
-                              '💡 Get Advice',
-                              'Kya khana chahiye...',
-                              Icons.lightbulb,
-                            ),
-                            const SizedBox(width: 8),
-                            _buildQuickActionButton(
-                              '👨‍🍳 Cooking Tips',
-                              'Dal kaise banau...',
-                              Icons.school,
-                            ),
-                            const SizedBox(width: 8),
-                            _buildQuickActionButton(
-                              '🛒 Grocery List',
-                              'Grocery list banao',
-                              Icons.shopping_cart,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  
-                  // Main input row
-                  Row(
-                    children: [
-                      // Voice input button with enhanced animation
-                      AnimatedBuilder(
-                        animation: _pulseAnimation,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _isListening ? _pulseAnimation.value : 1.0,
-                            child: Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: _isListening 
-                                      ? [Colors.red[400]!, Colors.red[600]!]
-                                      : [Colors.green[400]!, Colors.green[600]!],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: (_isListening ? Colors.red : Colors.green).withValues(alpha: 0.4),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(28),
-                                  onTap: _isListening || !_isInitialized ? null : _startVoiceInput,
-                                  child: Icon(
-                                    _isListening ? Icons.mic : Icons.mic_none,
-                                    color: Colors.white,
-                                    size: 28,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 12),
-                      
-                      // Enhanced text input
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: Colors.grey[300]!),
-                          ),
-                          child: TextField(
-                            controller: _textController,
-                            decoration: const InputDecoration(
-                              hintText: 'Type in Hindi/English... (e.g., "Maine dal chawal khaya")',
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              hintStyle: TextStyle(color: Colors.grey),
-                            ),
-                            maxLines: null,
-                            textInputAction: TextInputAction.send,
-                            onSubmitted: _handleTextInput,
-                            enabled: _isInitialized && !_isProcessing,
-                          ),
-                        ),
-                      ),
-                      
-                      const SizedBox(width: 8),
-                      
-                      // Send button
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.green[600],
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          onPressed: _isInitialized && !_isProcessing 
-                              ? () => _handleTextInput(_textController.text)
-                              : null,
-                          icon: const Icon(Icons.send, color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+
+          // Input panel
+          _InputPanel(
+            controller: _textController,
+            isEnabled: _isInitialized && !_isProcessing,
+            isListening: _isListening,
+            isScanningFood: _isScanningFood,
+            pulseAnimation: _pulseAnimation,
+            onVoice: _startVoiceInput,
+            onScan: _openFoodScan,
+            onSend: _handleTextInput,
+            onQuickAction: _handleQuickAction,
           ),
         ],
       ),
     );
   }
 
-  // Helper methods for enhanced UI
-  List<Color> _getStatusGradientColors() {
-    if (!_isInitialized) return [Colors.orange[400]!, Colors.orange[600]!];
-    if (_isListening) return [Colors.red[400]!, Colors.red[600]!];
-    if (_isProcessing) return [Colors.blue[400]!, Colors.blue[600]!];
-    return [Colors.green[400]!, Colors.green[600]!];
-  }
-
-  Color _getStatusColor() {
-    if (!_isInitialized) return Colors.orange[600]!;
-    if (_isListening) return Colors.red[600]!;
-    if (_isProcessing) return Colors.blue[600]!;
-    return Colors.green[600]!;
-  }
-
-  IconData _getStatusIcon() {
-    if (!_isInitialized) return Icons.hourglass_empty;
-    if (_isListening) return Icons.mic;
-    if (_isProcessing) return Icons.psychology;
-    return Icons.check_circle;
-  }
-
-  String _getStatusTitle() {
-    if (!_isInitialized) return 'Initializing...';
-    if (_isListening) return 'Listening...';
-    if (_isProcessing) return 'Processing...';
-    return 'Ready to Help!';
-  }
-
-  String _getStatusSubtitle() {
-    if (!_isInitialized) return 'Setting up your AI assistant';
-    if (_isListening) return 'Speak now in Hindi or English';
-    if (_isProcessing) return 'Understanding your request';
-    return 'Tap mic or type your message';
-  }
-
   void _showHelpDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('🤖 How to Use Voice AI Assistant'),
+      builder: (ctx) => AlertDialog(
+        title: const Text('How to use'),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('**Voice Commands:**', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 8),
-              Text('🍽️ "Maine breakfast mein poha khaya"'),
-              Text('💡 "Kya khana chahiye weight loss ke liye?"'),
-              Text('👨‍🍳 "Dal kaise banau healthy?"'),
-              Text('🛒 "Grocery list banao"'),
-              Text('📊 "Mera nutrition kaisa hai?"'),
-              SizedBox(height: 16),
-              Text('**Enhanced Features:**', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 8),
-              Text('• Intelligent meal logging with cultural context'),
-              Text('• Personalized recommendations based on your profile'),
-              Text('• Indian cooking education and tips'),
-              Text('• Automatic grocery list generation'),
-              Text('• Conversation context and memory'),
+              Text('Voice & Text', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 6),
+              Text('"Maine subah poha khaya"'),
+              Text('"Kya khana chahiye weight loss mein?"'),
+              Text('"Dal kaise banau healthy?"'),
+              SizedBox(height: 14),
+              Text('Food Camera', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 6),
+              Text('Tap 📸 to scan a meal and log it instantly with confidence scores.'),
+              SizedBox(height: 14),
+              Text('Features', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 6),
               Text('• Hinglish language support'),
-              Text('• Voice & text input support'),
-              SizedBox(height: 16),
-              Text('**Smart Features:**', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 8),
-              Text('• Understands Indian food names and portions'),
-              Text('• Handles ambiguous descriptions with clarification'),
-              Text('• Provides culturally appropriate advice'),
-              Text('• Learns from your eating patterns'),
+              Text('• Conversation history saved'),
+              Text('• Personalised to your profile'),
+              Text('• Food vision with confidence UI'),
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('Got it!'),
           ),
         ],
@@ -677,8 +572,197 @@ class _VoiceAIAssistantScreenState extends ConsumerState<VoiceAIAssistantScreen>
   }
 }
 
-// Enhanced message types for better UI
-enum MessageType {
+// ── Input panel ───────────────────────────────────────────────────────────────
+
+class _InputPanel extends StatelessWidget {
+  const _InputPanel({
+    required this.controller,
+    required this.isEnabled,
+    required this.isListening,
+    required this.isScanningFood,
+    required this.pulseAnimation,
+    required this.onVoice,
+    required this.onScan,
+    required this.onSend,
+    required this.onQuickAction,
+  });
+
+  final TextEditingController controller;
+  final bool isEnabled;
+  final bool isListening;
+  final bool isScanningFood;
+  final Animation<double> pulseAnimation;
+  final VoidCallback onVoice;
+  final VoidCallback onScan;
+  final void Function(String) onSend;
+  final void Function(String) onQuickAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+            top: BorderSide(color: Theme.of(context).dividerColor)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Quick actions
+            if (isEnabled && !isListening)
+              SizedBox(
+                height: 36,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _QuickChip('🍽️ Log meal', 'Maine khaya...', onQuickAction),
+                    _QuickChip('💡 Advice', 'Kya khana chahiye...', onQuickAction),
+                    _QuickChip('👨‍🍳 Cooking', 'Dal kaise banau...', onQuickAction),
+                    _QuickChip('🛒 Grocery', 'Grocery list banao', onQuickAction),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 8),
+
+            // Mic + text field + camera + send
+            Row(
+              children: [
+                // Voice mic
+                AnimatedBuilder(
+                  animation: pulseAnimation,
+                  builder: (_, __) => Transform.scale(
+                    scale: isListening ? pulseAnimation.value : 1.0,
+                    child: _CircleButton(
+                      onTap: isListening || !isEnabled ? null : onVoice,
+                      gradient: LinearGradient(
+                        colors: isListening
+                            ? [Colors.red.shade400, Colors.red.shade600]
+                            : [Colors.green.shade400, Colors.green.shade600],
+                      ),
+                      icon: isListening ? Icons.mic : Icons.mic_none,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Text field
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: TextField(
+                      controller: controller,
+                      enabled: isEnabled,
+                      decoration: const InputDecoration(
+                        hintText: 'Type in Hindi / English...',
+                        border: InputBorder.none,
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        hintStyle: TextStyle(fontSize: 14),
+                      ),
+                      maxLines: null,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: onSend,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Camera / food scan
+                _CircleButton(
+                  onTap: isScanningFood || !isEnabled ? null : onScan,
+                  gradient: LinearGradient(
+                    colors: isScanningFood
+                        ? [Colors.blue.shade300, Colors.blue.shade500]
+                        : [Colors.orange.shade400, Colors.orange.shade600],
+                  ),
+                  icon: Icons.camera_alt,
+                  size: 44,
+                ),
+                const SizedBox(width: 6),
+
+                // Send
+                _CircleButton(
+                  onTap: isEnabled ? () => onSend(controller.text) : null,
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade500, Colors.green.shade700],
+                  ),
+                  icon: Icons.send,
+                  size: 44,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickChip extends StatelessWidget {
+  const _QuickChip(this.label, this.prompt, this.onTap);
+  final String label;
+  final String prompt;
+  final void Function(String) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ActionChip(
+        label: Text(label, style: const TextStyle(fontSize: 12)),
+        onPressed: () => onTap(prompt),
+        visualDensity: VisualDensity.compact,
+      ),
+    );
+  }
+}
+
+class _CircleButton extends StatelessWidget {
+  const _CircleButton({
+    required this.onTap,
+    required this.gradient,
+    required this.icon,
+    this.size = 48,
+  });
+
+  final VoidCallback? onTap;
+  final LinearGradient gradient;
+  final IconData icon;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          gradient: onTap != null ? gradient : const LinearGradient(colors: [Colors.grey, Colors.grey]),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.white, size: size * 0.5),
+      ),
+    );
+  }
+}
+
+// ── Chat data model ───────────────────────────────────────────────────────────
+
+enum _MessageType {
   normal,
   welcome,
   success,
@@ -689,55 +773,72 @@ enum MessageType {
   grocery,
 }
 
-class ChatMessage {
-  final String text;
-  final bool isUser;
-  final DateTime timestamp;
-  final MessageType messageType;
-
-  ChatMessage({
+class _ChatMessage {
+  const _ChatMessage({
     required this.text,
-    required this.isUser,
+    required this.role,
     required this.timestamp,
-    this.messageType = MessageType.normal,
+    this.messageType = _MessageType.normal,
+    this.isStreaming = false,
   });
+
+  final String text;
+  final String role; // 'user' | 'assistant'
+  final DateTime timestamp;
+  final _MessageType messageType;
+  final bool isStreaming;
+
+  bool get isUser => role == 'user';
+
+  _ChatMessage copyWith({String? text, bool? isStreaming}) => _ChatMessage(
+        text: text ?? this.text,
+        role: role,
+        timestamp: timestamp,
+        messageType: messageType,
+        isStreaming: isStreaming ?? this.isStreaming,
+      );
 }
 
-class EnhancedChatBubble extends StatelessWidget {
-  final ChatMessage message;
+// ── Chat bubble ───────────────────────────────────────────────────────────────
 
-  const EnhancedChatBubble({super.key, required this.message});
+class _ChatBubble extends StatelessWidget {
+  const _ChatBubble({required this.message});
+  final _ChatMessage message;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
-        mainAxisAlignment: message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment:
+            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!message.isUser) ...[
-            _buildAvatar(),
+            _Avatar(isUser: false),
             const SizedBox(width: 8),
           ],
           Flexible(
             child: Container(
               constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
+                maxWidth: MediaQuery.of(context).size.width * 0.76,
               ),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
               decoration: BoxDecoration(
-                gradient: _getMessageGradient(),
+                gradient: _gradient(isDark),
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: Radius.circular(message.isUser ? 20 : 4),
-                  bottomRight: Radius.circular(message.isUser ? 4 : 20),
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(message.isUser ? 18 : 4),
+                  bottomRight: Radius.circular(message.isUser ? 4 : 18),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -745,34 +846,37 @@ class EnhancedChatBubble extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (!message.isUser && message.messageType != MessageType.normal)
-                    _buildMessageTypeHeader(),
-                  Text(
-                    message.text,
-                    style: TextStyle(
-                      color: message.isUser ? Colors.white : Colors.black87,
-                      fontSize: 16,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  if (!message.isUser && message.messageType != _MessageType.normal)
+                    _TypeBadge(type: message.messageType),
                   Row(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Icon(
-                        Icons.access_time,
-                        size: 12,
-                        color: message.isUser ? Colors.white70 : Colors.grey[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${message.timestamp.hour}:${message.timestamp.minute.toString().padLeft(2, '0')}',
-                        style: TextStyle(
-                          color: message.isUser ? Colors.white70 : Colors.grey[600],
-                          fontSize: 12,
+                      Flexible(
+                        child: Text(
+                          message.text,
+                          style: TextStyle(
+                            color: message.isUser ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                            fontSize: 15,
+                            height: 1.45,
+                          ),
                         ),
                       ),
+                      if (message.isStreaming) ...[
+                        const SizedBox(width: 4),
+                        const _TypingCursor(),
+                      ],
                     ],
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '${message.timestamp.hour}:${message.timestamp.minute.toString().padLeft(2, '0')}',
+                    style: TextStyle(
+                      color: message.isUser
+                          ? Colors.white60
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
@@ -780,134 +884,142 @@ class EnhancedChatBubble extends StatelessWidget {
           ),
           if (message.isUser) ...[
             const SizedBox(width: 8),
-            _buildAvatar(),
+            _Avatar(isUser: true),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildAvatar() {
+  LinearGradient _gradient(bool isDark) {
+    if (message.isUser) {
+      return LinearGradient(
+          colors: [Colors.green.shade500, Colors.green.shade700],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight);
+    }
+    if (isDark) {
+      return LinearGradient(
+          colors: [Colors.grey.shade800, Colors.grey.shade900]);
+    }
+    switch (message.messageType) {
+      case _MessageType.welcome:
+        return LinearGradient(colors: [Colors.blue.shade50, Colors.blue.shade100]);
+      case _MessageType.success:
+        return LinearGradient(colors: [Colors.green.shade50, Colors.green.shade100]);
+      case _MessageType.error:
+        return LinearGradient(colors: [Colors.red.shade50, Colors.red.shade100]);
+      case _MessageType.recommendation:
+        return LinearGradient(colors: [Colors.purple.shade50, Colors.purple.shade100]);
+      case _MessageType.education:
+        return LinearGradient(colors: [Colors.orange.shade50, Colors.orange.shade100]);
+      case _MessageType.grocery:
+        return LinearGradient(colors: [Colors.teal.shade50, Colors.teal.shade100]);
+      default:
+        return LinearGradient(colors: [Colors.grey.shade100, Colors.grey.shade200]);
+    }
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.isUser});
+  final bool isUser;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      width: 36,
-      height: 36,
+      width: 32,
+      height: 32,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: message.isUser 
-              ? [Colors.blue[400]!, Colors.blue[600]!]
-              : [Colors.green[400]!, Colors.green[600]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: isUser
+              ? [Colors.blue.shade400, Colors.blue.shade600]
+              : [Colors.green.shade400, Colors.green.shade600],
         ),
         shape: BoxShape.circle,
       ),
-      child: Icon(
-        message.isUser ? Icons.person : Icons.smart_toy,
-        color: Colors.white,
-        size: 20,
-      ),
+      child: Icon(isUser ? Icons.person : Icons.smart_toy,
+          color: Colors.white, size: 18),
     );
   }
+}
 
-  Widget _buildMessageTypeHeader() {
-    final typeInfo = _getMessageTypeInfo();
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            typeInfo['icon'],
-            size: 16,
-            color: typeInfo['color'],
-          ),
-          const SizedBox(width: 6),
-          Text(
-            typeInfo['label'],
+class _TypeBadge extends StatelessWidget {
+  const _TypeBadge({required this.type});
+  final _MessageType type;
+
+  @override
+  Widget build(BuildContext context) {
+    final info = _info();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(info.$1, size: 13, color: info.$2),
+        const SizedBox(width: 4),
+        Text(info.$3,
             style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: typeInfo['color'],
-            ),
-          ),
-        ],
-      ),
+                fontSize: 11, fontWeight: FontWeight.bold, color: info.$2)),
+      ]),
     );
   }
 
-  LinearGradient _getMessageGradient() {
-    if (message.isUser) {
-      return LinearGradient(
-        colors: [Colors.green[500]!, Colors.green[700]!],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-    }
-
-    switch (message.messageType) {
-      case MessageType.welcome:
-        return LinearGradient(
-          colors: [Colors.blue[50]!, Colors.blue[100]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case MessageType.success:
-        return LinearGradient(
-          colors: [Colors.green[50]!, Colors.green[100]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case MessageType.error:
-        return LinearGradient(
-          colors: [Colors.red[50]!, Colors.red[100]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case MessageType.recommendation:
-        return LinearGradient(
-          colors: [Colors.purple[50]!, Colors.purple[100]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case MessageType.education:
-        return LinearGradient(
-          colors: [Colors.orange[50]!, Colors.orange[100]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case MessageType.grocery:
-        return LinearGradient(
-          colors: [Colors.teal[50]!, Colors.teal[100]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
+  (IconData, Color, String) _info() {
+    switch (type) {
+      case _MessageType.welcome:
+        return (Icons.waving_hand, Colors.blue.shade600, 'Welcome');
+      case _MessageType.success:
+        return (Icons.check_circle, Colors.green.shade600, 'Logged');
+      case _MessageType.error:
+        return (Icons.error, Colors.red.shade600, 'Error');
+      case _MessageType.info:
+        return (Icons.info, Colors.blue.shade600, 'Info');
+      case _MessageType.recommendation:
+        return (Icons.lightbulb, Colors.purple.shade600, 'Recommendation');
+      case _MessageType.education:
+        return (Icons.school, Colors.orange.shade600, 'Cooking Tips');
+      case _MessageType.grocery:
+        return (Icons.shopping_cart, Colors.teal.shade600, 'Grocery');
       default:
-        return LinearGradient(
-          colors: [Colors.grey[100]!, Colors.grey[200]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
+        return (Icons.chat, Colors.grey.shade600, '');
     }
   }
+}
 
-  Map<String, dynamic> _getMessageTypeInfo() {
-    switch (message.messageType) {
-      case MessageType.welcome:
-        return {'icon': Icons.waving_hand, 'label': 'Welcome', 'color': Colors.blue[600]};
-      case MessageType.success:
-        return {'icon': Icons.check_circle, 'label': 'Success', 'color': Colors.green[600]};
-      case MessageType.error:
-        return {'icon': Icons.error, 'label': 'Error', 'color': Colors.red[600]};
-      case MessageType.info:
-        return {'icon': Icons.info, 'label': 'Info', 'color': Colors.blue[600]};
-      case MessageType.recommendation:
-        return {'icon': Icons.lightbulb, 'label': 'Recommendations', 'color': Colors.purple[600]};
-      case MessageType.education:
-        return {'icon': Icons.school, 'label': 'Cooking Tips', 'color': Colors.orange[600]};
-      case MessageType.grocery:
-        return {'icon': Icons.shopping_cart, 'label': 'Grocery List', 'color': Colors.teal[600]};
-      default:
-        return {'icon': Icons.chat, 'label': 'Chat', 'color': Colors.grey[600]};
-    }
+/// Blinking cursor shown while text is streaming in.
+class _TypingCursor extends StatefulWidget {
+  const _TypingCursor();
+  @override
+  State<_TypingCursor> createState() => _TypingCursorState();
+}
+
+class _TypingCursorState extends State<_TypingCursor>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _ctrl,
+      child: Container(
+        width: 2,
+        height: 16,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+    );
   }
 }
